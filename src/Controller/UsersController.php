@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
+use Cake\Event\Event;
 
 /**
  * Users Controller
@@ -102,4 +104,43 @@ class UsersController extends AppController
         }
         return $this->redirect(['action' => 'index']);
     }
+
+    /**
+     * Login method
+     * 
+     * @return void
+     */
+    public function login()
+    {
+        if ($this->request->is('post')) {
+            $user = $this->Auth->identify();
+            if ($user) {
+                $this->Auth->setUser($user);
+                return $this->redirect($this->Auth->redirectUrl());
+            }
+            $this->Flash->error('Your username or password is incorrect.');
+        }
+    }
+
+    /**
+     * Lougout method
+     * 
+     * @return void
+     */
+    public function logout()
+    {
+        $this->Flash->success('You are now logged out.');
+        return $this->redirect($this->Auth->logout());
+    }
+
+    /**
+     * Enabling Registrations
+     * 
+     * @param Event $event
+     */
+    public function beforeFilter(Event $event)
+    {
+        $this->Auth->allow(['add']);
+    }
+
 }

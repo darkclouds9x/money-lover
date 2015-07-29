@@ -19,7 +19,6 @@
     <fieldset>
         <legend><?= __('Edit Wallet') ?></legend>
         <?php
-            echo $this->Form->input('user_id', ['options' => $users]);
             echo $this->Form->input('title');
             echo $this->Form->input('init_balance');
             echo $this->Form->input('is_current');

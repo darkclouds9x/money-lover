@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
@@ -19,7 +20,9 @@ class WalletsController extends AppController
     public function index()
     {
         $this->paginate = [
-            'contain' => ['Users']
+            'conditions' => [
+                'Wallets.user_id' => $this->Auth->user('id'),
+            ]
         ];
         $this->set('wallets', $this->paginate($this->Wallets));
         $this->set('_serialize', ['wallets']);
@@ -51,6 +54,7 @@ class WalletsController extends AppController
         $wallet = $this->Wallets->newEntity();
         if ($this->request->is('post')) {
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
+            $wallet->user_id = $this->Auth->user('id');
             if ($this->Wallets->save($wallet)) {
                 $this->Flash->success(__('The wallet has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -58,8 +62,7 @@ class WalletsController extends AppController
                 $this->Flash->error(__('The wallet could not be saved. Please, try again.'));
             }
         }
-        $users = $this->Wallets->Users->find('list', ['limit' => 200]);
-        $this->set(compact('wallet', 'users'));
+        $this->set(compact('wallet'));
         $this->set('_serialize', ['wallet']);
     }
 
@@ -77,6 +80,7 @@ class WalletsController extends AppController
         ]);
         if ($this->request->is(['patch', 'post', 'put'])) {
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
+            $wallet->user_id = $this->Auth->user('id');
             if ($this->Wallets->save($wallet)) {
                 $this->Flash->success(__('The wallet has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -84,8 +88,7 @@ class WalletsController extends AppController
                 $this->Flash->error(__('The wallet could not be saved. Please, try again.'));
             }
         }
-        $users = $this->Wallets->Users->find('list', ['limit' => 200]);
-        $this->set(compact('wallet', 'users'));
+        $this->set(compact('wallet'));
         $this->set('_serialize', ['wallet']);
     }
 
@@ -107,4 +110,33 @@ class WalletsController extends AppController
         }
         return $this->redirect(['action' => 'index']);
     }
+
+    /**
+     * Authorization logic for wallets
+     * 
+     * @param type $user
+     * @return boolean
+     */
+    public function isAuthorized($user)
+    {
+        $action = $this->request->params['action'];
+
+        // The add and index actions are always allowed.
+        if (in_array($action, ['index', 'add'])) {
+            return true;
+        }
+        // All other actions require an id.
+        if (empty($this->request->params['pass'][0])) {
+            return false;
+        }
+
+        // Check that the wallet belongs to the current user.
+        $id = $this->request->params['pass'][0];
+        $bookmark = $this->Wallets->get($id);
+        if ($bookmark->user_id == $user['id']) {
+            return true;
+        }
+        return parent::isAuthorized($user);
+    }
+
 }

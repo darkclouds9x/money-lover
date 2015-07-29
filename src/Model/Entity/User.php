@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
@@ -18,4 +19,17 @@ class User extends Entity
         '*' => true,
         'id' => false,
     ];
+
+    /**
+     * Adding Password Hashing
+     * 
+     * @param type $value
+     * @return type
+     */
+    protected function _setPassword($value)
+    {
+        $hasher = new DefaultPasswordHasher();
+        return $hasher->hash($value);
+    }
+
 }
