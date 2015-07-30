@@ -62,7 +62,7 @@ class WalletsTable extends Table
         $validator
             ->add('is_current', 'valid', ['rule' => 'numeric'])
             ->requirePresence('is_current', 'create')
-            ->notEmpty('is_current');
+            ->allowEmpty('is_current');
 
         $validator
             ->add('deleted', 'valid', ['rule' => 'date'])

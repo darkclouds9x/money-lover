@@ -17,6 +17,7 @@
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Event\Event;
 
 /**
  * Application Controller
@@ -54,12 +55,21 @@ class AppController extends Controller
                 'controller' => 'Users',
                 'action' => 'login'
             ],
+            'loginRedirect' => '/',
+            'logoutRedirect' => '/',
             'unauthorizedRedirect' => $this->referer()
         ]);
+
+        $this->set('authUser', $this->Auth->user());
 
         // Allow the display action so our pages controller
         // continues to work.
         $this->Auth->allow(['display']);
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        $this->Auth->allow(['index', 'view', 'display']);
     }
 
     /**

@@ -13,7 +13,6 @@
     <thead>
         <tr>
             <th><?= $this->Paginator->sort('id') ?></th>
-            <th><?= $this->Paginator->sort('user_id') ?></th>
             <th><?= $this->Paginator->sort('title') ?></th>
             <th><?= $this->Paginator->sort('init_balance') ?></th>
             <th><?= $this->Paginator->sort('is_current') ?></th>

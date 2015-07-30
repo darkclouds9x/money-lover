@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\Event;
-
+use Cake\Network\Email\Email;
 /**
  * Users Controller
  *
@@ -31,8 +31,11 @@ class UsersController extends AppController
      * @return void
      * @throws \Cake\Network\Exception\NotFoundException When record not found.
      */
-    public function view($id = null)
+    public function view($id)
     {
+        if (!$id) {
+            throw new NotFoundException(__('Invalid user'));
+        }
         $user = $this->Users->get($id, [
             'contain' => ['Wallets']
         ]);
@@ -52,7 +55,12 @@ class UsersController extends AppController
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                $email = new Email('gmail');
+                $email->from(['thanhnt@rikkeisoft.com' => 'My Site'])
+                        ->to('thanhnt07.vn@gmail.com')
+                        ->subject('About')
+                        ->send('My message');
+                return $this->redirect(['_name' => 'home']);
             } else {
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
             }
@@ -140,7 +148,7 @@ class UsersController extends AppController
      */
     public function beforeFilter(Event $event)
     {
-        $this->Auth->allow(['add']);
+        $this->Auth->allow(['add', 'logout']);
     }
 
 }

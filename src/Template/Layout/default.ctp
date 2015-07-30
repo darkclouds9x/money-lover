@@ -12,7 +12,9 @@
  * @since         0.10.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
-$cakeDescription = 'CakePHP: the rapid development php framework';
+$cakeDescription = 'Money Lover';
+
+use Cake\Routing\Router;
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,23 +27,52 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
         </title>
         <?= $this->Html->meta('icon') ?>
 
+        <?= $this->Html->css('bootstrap.min.css') ?>
+        <?= $this->Html->css('font-awesome.css') ?>
+        <?= $this->Html->css('style.css') ?>
         <?= $this->Html->css('base.css') ?>
         <?= $this->Html->css('cake.css') ?>
+
+<?= $this->Html->script('modernizr-2.6.2.min'); ?>
+        <?= $this->Html->script('jquery.min'); ?>
+        <?= $this->Html->script('bootstrap.min.js') ?>
 
         <?= $this->fetch('meta') ?>
         <?= $this->fetch('css') ?>
         <?= $this->fetch('script') ?>
     </head>
     <body>
-        <header>
-            <div class="header-title">
-                <span><?= $this->fetch('title') ?></span>
-            </div>
-            <div class="header-help">
-                <span><a target="_blank" href="http://book.cakephp.org/3.0/">Documentation</a></span>
-                <span><a target="_blank" href="http://api.cakephp.org/3.0/">API</a></span>
-            </div>
-        </header>
+        <div id="header">
+            <nav class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu">
+                            <span class="sr-only">Toggle Navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="<?= Router::url(['_name' => 'home']) ?>">Money Lover</a>
+                    </div>
+                    <div class="navbar-collapse collapse" id="main-menu">
+                        <ul class="nav navbar-nav">                        
+                            <li class="active"><a href="<?= Router::url(['_name' => 'home']) ?>">Home</a></li>
+                            <li><a href="">About</a></li>
+                            <li><a href="">Contact</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <?php if (!$authUser) { ?>
+                                <li><a href="<?= Router::url(['_name' => 'login']) ?>">Login</a></li>
+                                <li><a href="<?= Router::url(['_name' => 'signup']) ?>">Sign Up</a></li>
+                            <?php } else { ?>
+                                <li><a href="<?= Router::url(['_name' => 'logout']) ?>">Log Out</a></li>
+                            <?php } ?>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div> <!-- end .row navbar-->
+
         <div id="container">
 
             <div id="content">
