@@ -66,7 +66,12 @@ Router::scope('/', function ($routes) {
     $routes->connect(
             '/signup', ['controller' => 'Users', 'action' => 'add'], ['_name' => 'signup']
     );
-
+  $routes->connect(
+            '/change-password', ['controller' => 'Users', 'action' => 'changePassword'], ['_name' => 'changePass']
+    );
+   $routes->connect(
+            '/reset-password', ['controller' => 'Users', 'action' => 'resetPassword'], ['_name' => 'resetPass']
+    );
     /**
      * Connect catchall routes for all controllers.
      *

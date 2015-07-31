@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Table;
 
 use App\Model\Entity\User;
@@ -43,33 +44,48 @@ class UsersTable extends Table
     public function validationDefault(Validator $validator)
     {
         $validator
-            ->add('id', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('id', 'create');
+                ->add('id', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('id', 'create');
 
         $validator
-            ->add('email', 'valid', ['rule' => 'email'])
-            ->requirePresence('email', 'create')
-            ->notEmpty('email');
+                ->add('email', 'valid', ['rule' => 'email'])
+                ->requirePresence('email', 'create')
+                ->notEmpty('email');
 
         $validator
-            ->requirePresence('password', 'create')
-            ->notEmpty('password');
+                ->requirePresence('password', 'true')
+                ->add('password', [
+                    'minLength' => [
+                        'rule' => ['minLength', 5],
+                        'message' => __('Password must have at least 5 characters')
+                    ]
+                ])
+                ->notEmpty('password');
+         $validator
+                ->requirePresence('confirm_password', 'update')
+                ->add('confirm_password', [
+                    'minLength' => [
+                        'rule' => ['minLength', 5],
+                        'message' => __('Confirm Password must have at least 5 characters')
+                    ]
+                ])
+                ->notEmpty('confirm_password');
 
         $validator
-            ->add('is_actived', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('is_actived');
+                ->add('is_actived', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('is_actived');
 
         $validator
-            ->add('last_wallet', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('last_wallet');
+                ->add('last_wallet', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('last_wallet');
 
         $validator
-            ->add('deleted', 'valid', ['rule' => 'date'])
-            ->allowEmpty('deleted');
+                ->add('deleted', 'valid', ['rule' => 'date'])
+                ->allowEmpty('deleted');
 
         $validator
-            ->add('status', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('status');
+                ->add('status', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('status');
 
         return $validator;
     }
@@ -86,4 +102,5 @@ class UsersTable extends Table
         $rules->add($rules->isUnique(['email']));
         return $rules;
     }
+
 }

@@ -126,7 +126,7 @@ class UsersController extends AppController
                 $this->Auth->setUser($user);
                 return $this->redirect($this->Auth->redirectUrl());
             }
-            $this->Flash->error('Your username or password is incorrect.');
+            $this->Flash->error(__('Your username or password is incorrect.'));
         }
     }
 
@@ -137,18 +137,72 @@ class UsersController extends AppController
      */
     public function logout()
     {
-        $this->Flash->success('You are now logged out.');
+        $this->Flash->success(__('You are now logged out.'));
         return $this->redirect($this->Auth->logout());
     }
 
-    /**
-     * Enabling Registrations
-     * 
-     * @param Event $event
-     */
-    public function beforeFilter(Event $event)
+    public function changePassword()
     {
-        $this->Auth->allow(['add', 'logout']);
+//
+//        $user = $this->Users->get($id, [
+//            'contain' => []
+//        ]);
+        if ($this->request->is('post')) {
+            $user = $this->Users->newEntity($this->request->data);
+            var_dump($user);            die();
+//            var_dump($user->errors());            die();
+//                        var_dump($user);            die();
+
+            if (!empty($user->errors())) {
+//                var_dump($user);                die();
+                $this->Users->save($user);
+                $this->Flash->success(__('The user has been saved.'));
+                return $this->redirect(['action' => 'index']);
+            } else {
+                $this->Flash->error(__('The user could not be saved. Please, try again.'));
+            }
+        }
+        $this->set(compact('user'));
+        $this->set('_serialize', ['user']);
+        $this->set('title', __('Change Password'));
     }
+
+    public function isAuthorized($user)
+    {
+        $action = $this->request->params['action'];
+
+        // The add and index actions are always allowed.
+        if (in_array($action, ['changePassword', 'index', 'edit', 'save'])) {
+            return true;
+        }
+
+        // All other actions require an id.
+        if (empty($this->request->params['pass'][0])) {
+            return false;
+        }
+
+        return parent::isAuthorized($user);
+    }
+
+    public function send_activation_email($user)
+    {
+        $email = new Email('default');
+        $email->to($user['email'])
+        ->subject('Please activate your account')
+        ->template('activate')
+        ->viewVars(array('user' => $user))
+        ->emailFormat('html')
+        ->send();
+    }
+
+/**
+ * Enabling Registrations
+ * 
+ * @param Event $event
+ */
+public function beforeFilter(Event $event)
+{
+$this->Auth->allow(['add', 'logout', 'changePassword']);
+}
 
 }

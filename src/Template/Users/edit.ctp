@@ -18,11 +18,7 @@
         <legend><?= __('Edit User') ?></legend>
         <?php
             echo $this->Form->input('email');
-            echo $this->Form->input('password');
-            echo $this->Form->input('is_actived');
             echo $this->Form->input('last_wallet');
-            echo $this->Form->input('deleted', ['empty' => true, 'default' => '']);
-            echo $this->Form->input('status');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

@@ -1,9 +1,8 @@
 <div class="col-sm-6 col-sm-offset-3">
 
-    <h1 class="text-center">Login</h1>
-    <?=$this->Form->create()?>
+    <h1 class="text-center"><?= __('Login') ?></h1>
+    <?= $this->Form->create() ?>
 
-    <!--<h2 class="form-signin-heading">Please sign in</h2>-->
     <div class="control-group">
         <?php
         echo $this->Form->input('email', array(
@@ -24,11 +23,16 @@
         ));
         ?>
     </div>
-    <div class="checkbox">
+    <div class="control-group">
         <label class="text-center">
-            <?php echo $this->Form->checkbox('rememberMe', array('hiddenField' => false, 'value' => '1')); ?> Remember me
+            <?php echo $this->Form->checkbox('rememberMe', array('hiddenField' => false, 'value' => '1')); ?>Remember me
+        </label>
+    </div> 
+    <?php echo $this->Form->button('Sign in', array('type' => 'submit', 'class' => 'btn btn-lg btn-primary btn-block')); ?>
+    <div class="control-group">
+        <label class="text-center">
+            <?php echo $this->Html->link(__('Forgot your password'), ['_name' => 'resetPass']); ?>
         </label>
     </div>
-    <?php echo $this->Form->button('Sign in', array('type' => 'submit', 'class' => 'btn btn-lg btn-primary btn-block')); ?>
     <?php echo $this->Form->end(); ?>
 </div>

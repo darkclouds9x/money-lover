@@ -33,7 +33,7 @@ use Cake\Routing\Router;
         <?= $this->Html->css('base.css') ?>
         <?= $this->Html->css('cake.css') ?>
 
-<?= $this->Html->script('modernizr-2.6.2.min'); ?>
+        <?= $this->Html->script('modernizr-2.6.2.min'); ?>
         <?= $this->Html->script('jquery.min'); ?>
         <?= $this->Html->script('bootstrap.min.js') ?>
 
@@ -62,10 +62,16 @@ use Cake\Routing\Router;
                         </ul>
                         <ul class="nav navbar-nav navbar-right">
                             <?php if (!$authUser) { ?>
-                                <li><a href="<?= Router::url(['_name' => 'login']) ?>">Login</a></li>
-                                <li><a href="<?= Router::url(['_name' => 'signup']) ?>">Sign Up</a></li>
+                                <li><a href="<?= Router::url(['_name' => 'login']) ?>"><?= __('Login')?></a></li>
+                                <li><a href="<?= Router::url(['_name' => 'signup']) ?>"><?= __('Sign Up')?></a></li>
                             <?php } else { ?>
-                                <li><a href="<?= Router::url(['_name' => 'logout']) ?>">Log Out</a></li>
+                                <li class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo($authUser['email']) ?><span class="caret"></span></a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="<?= Router::url(['_name' => 'logout']) ?>"><?= __('Logout')?></a></li>
+                                        <li><a href="<?= Router::url(['_name' => 'changePass']) ?>"><?= __('Change Password')?></a></li>
+                                    </ul>
+                                </li>
                             <?php } ?>
                         </ul>
                     </div>
@@ -74,11 +80,9 @@ use Cake\Routing\Router;
         </div> <!-- end .row navbar-->
 
         <div id="container">
-
             <div id="content">
                 <?= $this->Flash->render() ?>
                 <?= $this->Flash->render('auth') ?>
-
                 <div class="row">
                     <?= $this->fetch('content') ?>
                 </div>
