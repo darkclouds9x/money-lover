@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Network\Email\Email;
+use Cake\Validation\Validator;
+use App\Model\Entity\User;
+
 /**
  * Users Controller
  *
@@ -52,14 +55,15 @@ class UsersController extends AppController
     {
         $user = $this->Users->newEntity();
         if ($this->request->is('post')) {
+//                    var_dump($this->request->data); die;
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
-                $email = new Email('gmail');
-                $email->from(['thanhnt@rikkeisoft.com' => 'My Site'])
-                        ->to('thanhnt07.vn@gmail.com')
-                        ->subject('About')
-                        ->send('My message');
+//                $email = new Email('gmail');
+//                $email->from(['thanhnt@rikkeisoft.com' => 'My Site'])
+//                        ->to('thanhnt07.vn@gmail.com')
+//                        ->subject('About')
+//                        ->send('My message');
                 return $this->redirect(['_name' => 'home']);
             } else {
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
@@ -141,23 +145,30 @@ class UsersController extends AppController
         return $this->redirect($this->Auth->logout());
     }
 
+    /**
+     * Change password method
+     * @return type
+     */
     public function changePassword()
     {
-//
-//        $user = $this->Users->get($id, [
-//            'contain' => []
-//        ]);
-        if ($this->request->is('post')) {
-            $user = $this->Users->newEntity($this->request->data);
-            var_dump($user);            die();
-//            var_dump($user->errors());            die();
-//                        var_dump($user);            die();
+        $id = $this->Auth->user('id');
+        $data = $this->request->data;
+        $user = $this->Users->get($id, [
+            'contain' => []
+        ]);
 
-            if (!empty($user->errors())) {
-//                var_dump($user);                die();
-                $this->Users->save($user);
+        if ($this->request->is('post')) {
+            $user = $this->Users->patchEntity($user, $data, [
+                'password' => $data['password']
+            ]);
+            if($data['password'] != $data['confirm_password'] )
+            {
+                $this->Flash->error(__("The confirm pass isn't equal to new password"));
+                return $this->redirect($this->referer());
+            }
+            if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect(['_name' => 'home']);
             } else {
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
             }
@@ -167,6 +178,12 @@ class UsersController extends AppController
         $this->set('title', __('Change Password'));
     }
 
+    /**
+     * Authorization for action.
+     * 
+     * @param type $user
+     * @return boolean
+     */
     public function isAuthorized($user)
     {
         $action = $this->request->params['action'];
@@ -184,25 +201,34 @@ class UsersController extends AppController
         return parent::isAuthorized($user);
     }
 
+    public function active($id, $token)
+    {
+        
+    }
+    /**
+     * Send activation email
+     * 
+     * @param type $user
+     */
     public function send_activation_email($user)
     {
         $email = new Email('default');
         $email->to($user['email'])
-        ->subject('Please activate your account')
-        ->template('activate')
-        ->viewVars(array('user' => $user))
-        ->emailFormat('html')
-        ->send();
+                ->subject('Please activate your account')
+                ->template('activate')
+                ->viewVars(array('user' => $user))
+                ->emailFormat('html')
+                ->send();
     }
 
-/**
- * Enabling Registrations
- * 
- * @param Event $event
- */
-public function beforeFilter(Event $event)
-{
-$this->Auth->allow(['add', 'logout', 'changePassword']);
-}
+    /**
+     * Enabling Registrations
+     * 
+     * @param Event $event
+     */
+    public function beforeFilter(Event $event)
+    {
+        $this->Auth->allow(['add', 'logout', 'changePassword']);
+    }
 
 }

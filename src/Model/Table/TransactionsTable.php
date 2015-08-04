@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Table;
 
 use App\Model\Entity\Transaction;
@@ -33,6 +34,10 @@ class TransactionsTable extends Table
             'foreignKey' => 'category_id',
             'joinType' => 'INNER'
         ]);
+        $this->belongsTo('Wallets', [
+            'foreignKey' => 'wallet_id',
+            'joinType' => 'INNER'
+        ]);
     }
 
     /**
@@ -44,35 +49,35 @@ class TransactionsTable extends Table
     public function validationDefault(Validator $validator)
     {
         $validator
-            ->add('id', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('id', 'create');
+                ->add('id', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('id', 'create');
 
         $validator
-            ->allowEmpty('title');
+                ->allowEmpty('title');
 
         $validator
-            ->add('balance', 'valid', ['rule' => 'numeric'])
-            ->requirePresence('balance', 'create')
-            ->notEmpty('balance');
+                ->add('balance', 'valid', ['rule' => 'numeric'])
+                ->requirePresence('balance', 'create')
+                ->notEmpty('balance');
 
         $validator
-            ->allowEmpty('note');
+                ->allowEmpty('note');
 
         $validator
-            ->add('parent', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('parent');
+                ->add('parent', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('parent');
 
         $validator
-            ->add('done_date', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('done_date');
+                ->add('done_date', 'valid', ['rule' => 'datetime'])
+                ->allowEmpty('done_date');
 
         $validator
-            ->add('deleted', 'valid', ['rule' => 'date'])
-            ->allowEmpty('deleted');
+                ->add('deleted', 'valid', ['rule' => 'date'])
+                ->allowEmpty('deleted');
 
         $validator
-            ->add('status', 'valid', ['rule' => 'numeric'])
-            ->allowEmpty('status');
+                ->add('status', 'valid', ['rule' => 'numeric'])
+                ->allowEmpty('status');
 
         return $validator;
     }
@@ -89,4 +94,5 @@ class TransactionsTable extends Table
         $rules->add($rules->existsIn(['category_id'], 'Categories'));
         return $rules;
     }
+
 }

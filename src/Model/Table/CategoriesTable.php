@@ -75,7 +75,7 @@ class CategoriesTable extends Table
         $validator
             ->add('status', 'valid', ['rule' => 'numeric'])
             ->requirePresence('status', 'create')
-            ->notEmpty('status');
+            ->allowEmpty('status');
 
         return $validator;
     }

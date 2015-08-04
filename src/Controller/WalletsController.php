@@ -110,6 +110,11 @@ class WalletsController extends AppController
         }
         return $this->redirect(['action' => 'index']);
     }
+    
+    public function changeCurrentWallet()
+    {
+        
+    }
 
     /**
      * Authorization logic for wallets
@@ -123,7 +128,7 @@ class WalletsController extends AppController
 
         
         // The add and index actions are always allowed.
-        if (in_array($action, [ 'index','add'])) {
+        if (in_array($action, ['add'])) {
 
             return true;
         }

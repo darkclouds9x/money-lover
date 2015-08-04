@@ -7,6 +7,12 @@
     </ul>
 </div>
 <div class="transactions index large-10 medium-9 columns">
+    <?php echo $this->Form->input('wallet_id', ['options' => $wallets]); ?>
+    <?php echo $this->Html->link(
+    'Select wallet',
+    ['_name'],
+    ['class' => 'button', 'target' => '_blank']
+) ?>
     <table cellpadding="0" cellspacing="0">
     <thead>
         <tr>
@@ -30,7 +36,7 @@
             <td><?= h($transaction->title) ?></td>
             <td><?= $this->Number->format($transaction->balance) ?></td>
             <td><?= $this->Number->format($transaction->parent) ?></td>
-            <td><?= $this->Number->format($transaction->done_date) ?></td>
+            <td><?= h($transaction->done_date) ?></td>
             <td><?= h($transaction->created) ?></td>
             <td class="actions">
                 <?= $this->Html->link(__('View'), ['action' => 'view', $transaction->id]) ?>

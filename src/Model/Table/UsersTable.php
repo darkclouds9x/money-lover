@@ -33,6 +33,7 @@ class UsersTable extends Table
         $this->hasMany('Wallets', [
             'foreignKey' => 'user_id'
         ]);
+//        $this->verication_code =  md5(uniqid("yourrandomstringyouwanttoaddhere", true));
     }
 
     /**
@@ -48,6 +49,7 @@ class UsersTable extends Table
                 ->allowEmpty('id', 'create');
 
         $validator
+                
                 ->add('email', 'valid', ['rule' => 'email'])
                 ->requirePresence('email', 'create')
                 ->notEmpty('email');
@@ -61,8 +63,9 @@ class UsersTable extends Table
                     ]
                 ])
                 ->notEmpty('password');
-         $validator
-                ->requirePresence('confirm_password', 'update')
+        
+        $validator
+                ->requirePresence('confirm_password', 'true')
                 ->add('confirm_password', [
                     'minLength' => [
                         'rule' => ['minLength', 5],
@@ -70,7 +73,7 @@ class UsersTable extends Table
                     ]
                 ])
                 ->notEmpty('confirm_password');
-
+        
         $validator
                 ->add('is_actived', 'valid', ['rule' => 'numeric'])
                 ->allowEmpty('is_actived');

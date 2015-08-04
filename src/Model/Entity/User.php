@@ -32,5 +32,17 @@ class User extends Entity
         $hasher = new DefaultPasswordHasher();
         return $hasher->hash($password);
     }
+   
+    /**
+     * Create veriction_code method
+     * 
+     * @param type $verication_code
+     * @return type
+     */
+    public function createValicationCode()
+    {
+        $verication_code =  md5(uniqid("yourrandomstringyouwanttoaddhere", true));
+        return $verication_code;
+    }
 
 }

@@ -33,7 +33,6 @@ use Cake\Routing\Router;
         <?= $this->Html->css('base.css') ?>
         <?= $this->Html->css('cake.css') ?>
 
-        <?= $this->Html->script('modernizr-2.6.2.min'); ?>
         <?= $this->Html->script('jquery.min'); ?>
         <?= $this->Html->script('bootstrap.min.js') ?>
 
@@ -83,6 +82,7 @@ use Cake\Routing\Router;
             <div id="content">
                 <?= $this->Flash->render() ?>
                 <?= $this->Flash->render('auth') ?>
+                <?php echo $this->element('errors') ?>
                 <div class="row">
                     <?= $this->fetch('content') ?>
                 </div>

@@ -37,6 +37,9 @@ class WalletsTable extends Table
         $this->hasMany('Categories', [
             'foreignKey' => 'wallet_id'
         ]);
+        $this->hasMany('Transactions', [
+            'foreignKey' => 'wallet_id'
+        ]);
     }
 
     /**

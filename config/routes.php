@@ -67,7 +67,7 @@ Router::scope('/', function ($routes) {
             '/signup', ['controller' => 'Users', 'action' => 'add'], ['_name' => 'signup']
     );
   $routes->connect(
-            '/change-password', ['controller' => 'Users', 'action' => 'changePassword'], ['_name' => 'changePass']
+            '/change-password/', ['controller' => 'Users', 'action' => 'changePassword'], ['_name' => 'changePass']
     );
    $routes->connect(
             '/reset-password', ['controller' => 'Users', 'action' => 'resetPassword'], ['_name' => 'resetPass']

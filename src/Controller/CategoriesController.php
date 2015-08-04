@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
@@ -19,6 +20,9 @@ class CategoriesController extends AppController
     public function index()
     {
         $this->paginate = [
+            'condition' => [
+                'Categories.user_id' => $this->Auth->user('id'),
+            ],
             'contain' => ['Wallets', 'Types']
         ];
         $this->set('categories', $this->paginate($this->Categories));
@@ -51,6 +55,7 @@ class CategoriesController extends AppController
         $category = $this->Categories->newEntity();
         if ($this->request->is('post')) {
             $category = $this->Categories->patchEntity($category, $this->request->data);
+            $category->user_id = $this->Auth->user('id');
             if ($this->Categories->save($category)) {
                 $this->Flash->success(__('The category has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -78,6 +83,7 @@ class CategoriesController extends AppController
         ]);
         if ($this->request->is(['patch', 'post', 'put'])) {
             $category = $this->Categories->patchEntity($category, $this->request->data);
+            $category->user_id = $this->Auth->user('id');
             if ($this->Categories->save($category)) {
                 $this->Flash->success(__('The category has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -109,4 +115,34 @@ class CategoriesController extends AppController
         }
         return $this->redirect(['action' => 'index']);
     }
+
+    /**
+     * Authorization logic for categories
+     * 
+     * @param type $user
+     * @return boolean
+     */
+    public function isAuthorized($user)
+    {
+        $action = $this->request->params['action'];
+
+
+        // The add and index actions are always allowed.
+        if (in_array($action, ['add', 'edit'])) {
+            return true;
+        }
+        // All other actions require an id.
+        if (empty($this->request->params['pass'][0])) {
+            return false;
+        }
+
+        // Check that the wallet belongs to the current user.
+        $id = $this->request->params['pass'][0];
+        $category = $this->Categories->get($id);
+        if ($category->user_id == $user['id']) {
+            return true;
+        }
+        return parent::isAuthorized($user);
+    }
+
 }

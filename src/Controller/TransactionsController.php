@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
+use App\Model\Table\WalletsTable;
 
 /**
  * Transactions Controller
@@ -19,9 +21,14 @@ class TransactionsController extends AppController
     public function index()
     {
         $this->paginate = [
+            'condition' => [
+                'Transactions.wallet_id' => $this->Auth->user('last_wallet'),
+            ],
             'contain' => ['Categories']
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
+        $wallets = $this->Transactions->Wallets->find('list', ['limit' => 200]);
+        $this->set(compact('wallets'));
         $this->set('_serialize', ['transactions']);
     }
 
@@ -51,6 +58,8 @@ class TransactionsController extends AppController
         $transaction = $this->Transactions->newEntity();
         if ($this->request->is('post')) {
             $transaction = $this->Transactions->patchEntity($transaction, $this->request->data);
+            $transaction->wallet_id = $this->Auth->user('last_wallet');
+
             if ($this->Transactions->save($transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -107,4 +116,34 @@ class TransactionsController extends AppController
         }
         return $this->redirect(['action' => 'index']);
     }
+
+    /**
+     * Authorization logic for transactions
+     * 
+     * @param type $user
+     * @return boolean
+     */
+    public function isAuthorized($user)
+    {
+        $action = $this->request->params['action'];
+
+
+        // The add and index actions are always allowed.
+        if (in_array($action, ['add', 'edit'])) {
+            return true;
+        }
+        // All other actions require an id.
+        if (empty($this->request->params['pass'][0])) {
+            return false;
+        }
+
+        // Check that the wallet belongs to the current user.
+        $id = $this->request->params['pass'][0];
+        $transaction = $this->Transactions->get($id);
+        if ($transaction->user_id == $user['id']) {
+            return true;
+        }
+        return parent::isAuthorized($user);
+    }
+
 }

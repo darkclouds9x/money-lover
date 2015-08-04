@@ -4,7 +4,7 @@
     <h1 class="text-center"><?= __('Change Password') ?></h1>
     <?php if (!empty($authUser)): ?>
 
-        <?= $this->Form->create('User') ?>
+        <?= $this->Form->create() ?>
 
         <!--<h2 class="form-signin-heading">Please sign in</h2>-->
         <div class="control-group">

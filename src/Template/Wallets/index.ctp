@@ -25,9 +25,6 @@
     <?php foreach ($wallets as $wallet): ?>
         <tr>
             <td><?= $this->Number->format($wallet->id) ?></td>
-            <td>
-                <?= $wallet->has('user') ? $this->Html->link($wallet->user->id, ['controller' => 'Users', 'action' => 'view', $wallet->user->id]) : '' ?>
-            </td>
             <td><?= h($wallet->title) ?></td>
             <td><?= $this->Number->format($wallet->init_balance) ?></td>
             <td><?= $this->Number->format($wallet->is_current) ?></td>
