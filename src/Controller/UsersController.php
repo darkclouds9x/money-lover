@@ -53,17 +53,28 @@ class UsersController extends AppController
      */
     public function add()
     {
-        $user = $this->Users->newEntity();
-        if ($this->request->is('post')) {
-//                    var_dump($this->request->data); die;
-            $user = $this->Users->patchEntity($user, $this->request->data);
-            if ($this->Users->save($user)) {
-                $this->Flash->success(__('The user has been saved.'));
+//        $user = $this->Users->newEntity();
+//        if ($this->request->is('post')) {
+//            $user = $this->Users->patchEntity($user, $this->request->data);
+//            if ($this->Users->save($user)) {
+//                $this->Flash->success(__('The user has been saved.'));
 //                $email = new Email('gmail');
 //                $email->from(['thanhnt@rikkeisoft.com' => 'My Site'])
 //                        ->to('thanhnt07.vn@gmail.com')
 //                        ->subject('About')
 //                        ->send('My message');
+//                return $this->redirect(['_name' => 'home']);
+//            } else {
+//                $this->Flash->error(__('The user could not be saved. Please, try again.'));
+//            }
+//        }
+//        $this->set(compact('user'));
+//        $this->set('_serialize', ['user']);
+        $user = $this->Users->newEntity();
+        if ($this->request->is('post')) {
+            $user = $this->Users->patchEntity($user, $this->request->data);
+            if ($this->Users->save($user)) {
+                $this->Flash->success(__('The user has been saved.'));
                 return $this->redirect(['_name' => 'home']);
             } else {
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
@@ -128,7 +139,14 @@ class UsersController extends AppController
             $user = $this->Auth->identify();
             if ($user) {
                 $this->Auth->setUser($user);
-                return $this->redirect($this->Auth->redirectUrl());
+                if (empty($this->Auth->user('last_wallet'))) {
+                    return $this->redirect([
+                                'controller' => 'Wallets',
+                                'action' => 'add',
+                    ]);
+                } else {
+                    return $this->redirect(['_name' => 'home']);
+                }
             }
             $this->Flash->error(__('Your username or password is incorrect.'));
         }
@@ -156,13 +174,11 @@ class UsersController extends AppController
         $user = $this->Users->get($id, [
             'contain' => []
         ]);
-
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $data, [
                 'password' => $data['password']
             ]);
-            if($data['password'] != $data['confirm_password'] )
-            {
+            if ($data['password'] != $data['confirm_password']) {
                 $this->Flash->error(__("The confirm pass isn't equal to new password"));
                 return $this->redirect($this->referer());
             }
@@ -189,7 +205,7 @@ class UsersController extends AppController
         $action = $this->request->params['action'];
 
         // The add and index actions are always allowed.
-        if (in_array($action, ['changePassword', 'index', 'edit', 'save'])) {
+        if (in_array($action, ['changePassword', 'index', 'edit', 'save', 'add'])) {
             return true;
         }
 
@@ -201,10 +217,6 @@ class UsersController extends AppController
         return parent::isAuthorized($user);
     }
 
-    public function active($id, $token)
-    {
-        
-    }
     /**
      * Send activation email
      * 

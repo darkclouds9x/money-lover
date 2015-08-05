@@ -61,7 +61,6 @@ class AppController extends Controller
         ]);
 
         $this->set('authUser', $this->Auth->user());
-
         // Allow the display action so our pages controller
         // continues to work.
         $this->Auth->allow(['display']);
@@ -69,7 +68,7 @@ class AppController extends Controller
 
     public function beforeFilter(Event $event)
     {
-        $this->Auth->allow(['index', 'view', 'display']);
+        $this->Auth->allow(['display']);
     }
 
     /**

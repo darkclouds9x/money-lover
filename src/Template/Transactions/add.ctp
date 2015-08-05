@@ -15,10 +15,7 @@
             echo $this->Form->input('title');
             echo $this->Form->input('balance');
             echo $this->Form->input('note');
-            echo $this->Form->input('parent');
             echo $this->Form->input('done_date');
-            echo $this->Form->input('deleted', ['empty' => true, 'default' => '']);
-            echo $this->Form->input('status');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

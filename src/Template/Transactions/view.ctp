@@ -26,7 +26,7 @@
             <h6 class="subheader"><?= __('Parent') ?></h6>
             <p><?= $this->Number->format($transaction->parent) ?></p>
             <h6 class="subheader"><?= __('Done Date') ?></h6>
-            <p><?= $this->Number->format($transaction->done_date) ?></p>
+            <p><?= h($transaction->done_date) ?></p>
             <h6 class="subheader"><?= __('Status') ?></h6>
             <p><?= $this->Number->format($transaction->status) ?></p>
         </div>

@@ -14,21 +14,38 @@ class TransactionsController extends AppController
 {
 
     /**
+     * Load Model
+     */
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadModel('Users');
+    }
+
+    /**
      * Index method
      *
      * @return void
      */
     public function index()
     {
+        $id = $this->Auth->user('id');
+        $user = $this->Users->find()->where(['id' => $id])->first();
         $this->paginate = [
-            'condition' => [
-                'Transactions.wallet_id' => $this->Auth->user('last_wallet'),
+            'conditions' => [
+                'Transactions.wallet_id' => $user->last_wallet,
             ],
             'contain' => ['Categories']
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
-        $wallets = $this->Transactions->Wallets->find('list', ['limit' => 200]);
-        $this->set(compact('wallets'));
+        $wallets = $this->Transactions->Wallets->find('list', [
+            'conditions' => [
+                'Wallets.user_id' => $this->Auth->user('id')
+            ],
+            'limit' => 200
+        ]);
+        $last_wallet = $user->last_wallet;
+        $this->set(compact('wallets','last_wallet'));
         $this->set('_serialize', ['transactions']);
     }
 
@@ -55,11 +72,13 @@ class TransactionsController extends AppController
      */
     public function add()
     {
+        $id = $this->Auth->user('id');
+        $user = $this->Users->find()->where(['id' => $id])->first();
         $transaction = $this->Transactions->newEntity();
         if ($this->request->is('post')) {
             $transaction = $this->Transactions->patchEntity($transaction, $this->request->data);
             $transaction->wallet_id = $this->Auth->user('last_wallet');
-
+            $transaction->user_id = $this->Auth->user('id');
             if ($this->Transactions->save($transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -67,7 +86,11 @@ class TransactionsController extends AppController
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
             }
         }
-        $categories = $this->Transactions->Categories->find('list', ['limit' => 200]);
+        $categories = $this->Transactions->Categories->find('list', [
+            'conditions' => [
+                'Categories.wallet_id' => $this->$user['last_wallet']
+            ],
+            'limit' => 200]);
         $this->set(compact('transaction', 'categories'));
         $this->set('_serialize', ['transaction']);
     }
@@ -129,7 +152,7 @@ class TransactionsController extends AppController
 
 
         // The add and index actions are always allowed.
-        if (in_array($action, ['add', 'edit'])) {
+        if (in_array($action, [ 'index', 'view', 'add', 'edit'])) {
             return true;
         }
         // All other actions require an id.

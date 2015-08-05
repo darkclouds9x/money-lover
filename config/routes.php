@@ -52,6 +52,7 @@ Router::scope('/', function ($routes) {
     $routes->connect(
             '/', ['controller' => 'Transactions', 'action' => 'index'], ['_name' => 'home']
     );
+//     $routes->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
     /**
      * ...and connect the rest of 'Pages' controller's URLs.
      */
@@ -66,11 +67,18 @@ Router::scope('/', function ($routes) {
     $routes->connect(
             '/signup', ['controller' => 'Users', 'action' => 'add'], ['_name' => 'signup']
     );
-  $routes->connect(
+    $routes->connect(
             '/change-password/', ['controller' => 'Users', 'action' => 'changePassword'], ['_name' => 'changePass']
     );
-   $routes->connect(
+    $routes->connect(
             '/reset-password', ['controller' => 'Users', 'action' => 'resetPassword'], ['_name' => 'resetPass']
+    );
+
+    $routes->connect(
+            '/change-current-wallet', ['controller' => 'Wallets', 'action' => 'changeCurrentWallet'], ['_name' => 'changeWallet']
+    );
+    $routes->connect(
+            '/transfer-money', ['controller' => 'Wallets', 'action' => 'transferMoney'], ['_name' => 'transferMoney']
     );
     /**
      * Connect catchall routes for all controllers.

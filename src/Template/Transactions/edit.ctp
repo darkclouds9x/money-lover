@@ -1,12 +1,11 @@
 <div class="actions columns large-2 medium-3">
     <h3><?= __('Actions') ?></h3>
     <ul class="side-nav">
-        <li><?= $this->Form->postLink(
-                __('Delete'),
-                ['action' => 'delete', $transaction->id],
-                ['confirm' => __('Are you sure you want to delete # {0}?', $transaction->id)]
+        <li><?=
+            $this->Form->postLink(
+                    __('Delete'), ['action' => 'delete', $transaction->id], ['confirm' => __('Are you sure you want to delete # {0}?', $transaction->id)]
             )
-        ?></li>
+            ?></li>
         <li><?= $this->Html->link(__('List Transactions'), ['action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('List Categories'), ['controller' => 'Categories', 'action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('New Category'), ['controller' => 'Categories', 'action' => 'add']) ?></li>
@@ -17,14 +16,13 @@
     <fieldset>
         <legend><?= __('Edit Transaction') ?></legend>
         <?php
-            echo $this->Form->input('category_id', ['options' => $categories]);
-            echo $this->Form->input('title');
-            echo $this->Form->input('balance');
-            echo $this->Form->input('note');
-            echo $this->Form->input('parent');
-            echo $this->Form->input('done_date');
-            echo $this->Form->input('deleted', ['empty' => true, 'default' => '']);
-            echo $this->Form->input('status');
+        echo $this->Form->input('title');
+        echo $this->Form->input('category_id', ['options' => $categories]);
+        echo $this->Form->input('balance');
+        echo $this->Form->input('note');
+        echo $this->Form->input('parent');
+        echo $this->Form->input('done_date');
+        echo $this->Form->input('status');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

@@ -23,9 +23,6 @@
             echo $this->Form->input('wallet_id', ['options' => $wallets]);
             echo $this->Form->input('type_id');
             echo $this->Form->input('parent');
-            echo $this->Form->input('is_locked');
-            echo $this->Form->input('deleted', ['empty' => true, 'default' => '']);
-            echo $this->Form->input('status');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

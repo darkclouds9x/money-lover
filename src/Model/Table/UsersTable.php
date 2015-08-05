@@ -65,14 +65,13 @@ class UsersTable extends Table
                 ->notEmpty('password');
         
         $validator
-                ->requirePresence('confirm_password', 'true')
                 ->add('confirm_password', [
                     'minLength' => [
                         'rule' => ['minLength', 5],
                         'message' => __('Confirm Password must have at least 5 characters')
                     ]
                 ])
-                ->notEmpty('confirm_password');
+                ->allowEmpty('confirm_password');
         
         $validator
                 ->add('is_actived', 'valid', ['rule' => 'numeric'])

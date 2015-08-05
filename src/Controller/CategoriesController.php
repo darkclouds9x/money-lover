@@ -13,19 +13,33 @@ class CategoriesController extends AppController
 {
 
     /**
+     * Load Model
+     */
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadModel('Users');
+    }
+
+    /**
      * Index method
      *
      * @return void
      */
     public function index()
     {
+        $id = $this->Auth->user('id');
+        $user = $this->Users->find()->where(['id' => $id])->first();
         $this->paginate = [
-            'condition' => [
-                'Categories.user_id' => $this->Auth->user('id'),
-            ],
-            'contain' => ['Wallets', 'Types']
+            'contain' => ['Types']
         ];
+        $wallets = $this->Categories->Wallets->find('list', [
+            'conditions' => [
+                'Wallets.id' => $user->last_wallet,
+            ],
+        ]);
         $this->set('categories', $this->paginate($this->Categories));
+        $this->set(compact('wallets'));
         $this->set('_serialize', ['categories']);
     }
 
@@ -63,8 +77,12 @@ class CategoriesController extends AppController
                 $this->Flash->error(__('The category could not be saved. Please, try again.'));
             }
         }
-        $wallets = $this->Categories->Wallets->find('list', ['limit' => 200]);
-        $types = $this->Categories->Types->find('list', ['limit' => 200]);
+        $wallets = $this->Categories->Wallets->find('list', [
+            'conditions' => [
+                'Wallets.user_id' => $this->Auth->user('id')
+            ],
+            'limit' => 200]);
+        $types = $this->Categories->Types->find('list', ['limit' => 2]);
         $this->set(compact('category', 'wallets', 'types'));
         $this->set('_serialize', ['category']);
     }
@@ -128,7 +146,7 @@ class CategoriesController extends AppController
 
 
         // The add and index actions are always allowed.
-        if (in_array($action, ['add', 'edit'])) {
+        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
             return true;
         }
         // All other actions require an id.
