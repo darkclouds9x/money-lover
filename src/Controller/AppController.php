@@ -18,6 +18,7 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
+use Cake\Controller\Component\AuthComponent;
 
 /**
  * Application Controller
@@ -40,6 +41,7 @@ class AppController extends Controller
     public function initialize()
     {
         parent::initialize();
+        $this->loadModel('Users');
         $this->loadComponent('Flash');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
@@ -64,6 +66,18 @@ class AppController extends Controller
         // Allow the display action so our pages controller
         // continues to work.
         $this->Auth->allow(['display']);
+    }
+
+    /**
+     * Get current user
+     * 
+     * @return $userInfo
+     */
+    public function getCurrentUserInfo()
+    {
+        $id = $this->Auth->user('id');
+        $userInfo = $this->Users->find()->where(['id' => $id])->first();
+        return $userInfo;
     }
 
     public function beforeFilter(Event $event)

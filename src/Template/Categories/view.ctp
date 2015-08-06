@@ -11,82 +11,55 @@
         <li><?= $this->Html->link(__('New Transaction'), ['controller' => 'Transactions', 'action' => 'add']) ?> </li>
     </ul>
 </div>
-<div class="categories view large-10 medium-9 columns">
-    <h2><?= h($category->title) ?></h2>
-    <div class="row">
-        <div class="large-5 columns strings">
-            <h6 class="subheader"><?= __('Title') ?></h6>
-            <p><?= h($category->title) ?></p>
-            <h6 class="subheader"><?= __('Wallet') ?></h6>
-            <p><?= $category->has('wallet') ? $this->Html->link($category->wallet->title, ['controller' => 'Wallets', 'action' => 'view', $category->wallet->id]) : '' ?></p>
-        </div>
-        <div class="large-2 columns numbers end">
-            <h6 class="subheader"><?= __('Id') ?></h6>
-            <p><?= $this->Number->format($category->id) ?></p>
-            <h6 class="subheader"><?= __('Type Id') ?></h6>
-            <p><?= $this->Number->format($category->type_id) ?></p>
-            <h6 class="subheader"><?= __('Parent') ?></h6>
-            <p><?= $this->Number->format($category->parent) ?></p>
-            <h6 class="subheader"><?= __('Is Locked') ?></h6>
-            <p><?= $this->Number->format($category->is_locked) ?></p>
-            <h6 class="subheader"><?= __('Status') ?></h6>
-            <p><?= $this->Number->format($category->status) ?></p>
-        </div>
-        <div class="large-2 columns dates end">
-            <h6 class="subheader"><?= __('Created') ?></h6>
-            <p><?= h($category->created) ?></p>
-            <h6 class="subheader"><?= __('Modified') ?></h6>
-            <p><?= h($category->modified) ?></p>
-            <h6 class="subheader"><?= __('Deleted') ?></h6>
-            <p><?= h($category->deleted) ?></p>
-        </div>
-    </div>
-</div>
-<div class="related row">
-    <div class="column large-12">
-    <h4 class="subheader"><?= __('Related Transactions') ?></h4>
-    <?php if (!empty($category->transactions)): ?>
+<div class="categories index large-10 medium-9 columns">
+    <?=
+    $this->Form->create(null, [
+        'url' => ['_name' => 'changeWallet']
+    ])
+    ?>
+    <?php echo $this->Form->input('id', ['options' => $categories, 'default' => $category->id]); ?>
+    <?= $this->Form->button(__('Change wallet')) ?>
+    <?= $this->Form->end() ?>
+
     <table cellpadding="0" cellspacing="0">
-        <tr>
-            <th><?= __('Id') ?></th>
-            <th><?= __('Category Id') ?></th>
-            <th><?= __('Title') ?></th>
-            <th><?= __('Balance') ?></th>
-            <th><?= __('Note') ?></th>
-            <th><?= __('Parent') ?></th>
-            <th><?= __('Done Date') ?></th>
-            <th><?= __('Created') ?></th>
-            <th><?= __('Modified') ?></th>
-            <th><?= __('Deleted') ?></th>
-            <th><?= __('Status') ?></th>
-            <th class="actions"><?= __('Actions') ?></th>
-        </tr>
-        <?php foreach ($category->transactions as $transactions): ?>
-        <tr>
-            <td><?= h($transactions->id) ?></td>
-            <td><?= h($transactions->category_id) ?></td>
-            <td><?= h($transactions->title) ?></td>
-            <td><?= h($transactions->balance) ?></td>
-            <td><?= h($transactions->note) ?></td>
-            <td><?= h($transactions->parent) ?></td>
-            <td><?= h($transactions->done_date) ?></td>
-            <td><?= h($transactions->created) ?></td>
-            <td><?= h($transactions->modified) ?></td>
-            <td><?= h($transactions->deleted) ?></td>
-            <td><?= h($transactions->status) ?></td>
+        <thead>
+            <tr>
+                <th><?= $this->Paginator->sort('id') ?></th>
+                <th><?= $this->Paginator->sort('title') ?></th>
+                <th><?= $this->Paginator->sort('category_id') ?></th>
+                <th><?= $this->Paginator->sort('balance') ?></th>
+                <th><?= $this->Paginator->sort('done_date') ?></th>
+                <th><?= $this->Paginator->sort('created') ?></th>
+                <th class="actions"><?= __('Actions') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($transactions as $transaction): ?>
+                <tr>
+                    <td><?= $this->Number->format($transaction->id) ?></td>
+                    <td><?= h($transaction->title) ?></td>
+                    <td>
+                        <?= $transaction->has('category') ? $this->Html->link($transaction->category->title, ['controller' => 'Categories', 'action' => 'view', $transaction->category->id]) : '' ?>
+                    </td>
+                    <td><?= $this->Number->format($transaction->balance) ?></td>
+                    <td><?= h($transaction->done_date) ?></td>
+                    <td><?= h($transaction->created) ?></td>
+                    <td class="actions">
+                        <?= $this->Html->link(__('View'), ['action' => 'view', $transaction->id]) ?>
+                        <?= $this->Html->link(__('Edit'), ['action' => 'edit', $transaction->id]) ?>
+                        <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $transaction->id], ['confirm' => __('Are you sure you want to delete # {0}?', $transaction->id)]) ?>
+                    </td>
+                </tr>
 
-            <td class="actions">
-                <?= $this->Html->link(__('View'), ['controller' => 'Transactions', 'action' => 'view', $transactions->id]) ?>
-
-                <?= $this->Html->link(__('Edit'), ['controller' => 'Transactions', 'action' => 'edit', $transactions->id]) ?>
-
-                <?= $this->Form->postLink(__('Delete'), ['controller' => 'Transactions', 'action' => 'delete', $transactions->id], ['confirm' => __('Are you sure you want to delete # {0}?', $transactions->id)]) ?>
-
-            </td>
-        </tr>
-
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </tbody>
     </table>
-    <?php endif; ?>
+    <div class="paginator">
+        <ul class="pagination">
+            <?= $this->Paginator->prev('< ' . __('previous')) ?>
+            <?= $this->Paginator->numbers() ?>
+            <?= $this->Paginator->next(__('next') . ' >') ?>
+        </ul>
+        <p><?= $this->Paginator->counter() ?></p>
     </div>
 </div>

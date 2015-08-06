@@ -24,7 +24,6 @@
                 <th><?= $this->Paginator->sort('title') ?></th>
                 <th><?= $this->Paginator->sort('category_id') ?></th>
                 <th><?= $this->Paginator->sort('balance') ?></th>
-                <th><?= $this->Paginator->sort('parent') ?></th>
                 <th><?= $this->Paginator->sort('done_date') ?></th>
                 <th><?= $this->Paginator->sort('created') ?></th>
                 <th class="actions"><?= __('Actions') ?></th>
@@ -34,12 +33,11 @@
             <?php foreach ($transactions as $transaction): ?>
                 <tr>
                     <td><?= $this->Number->format($transaction->id) ?></td>
+                    <td><?= h($transaction->title) ?></td>
                     <td>
                         <?= $transaction->has('category') ? $this->Html->link($transaction->category->title, ['controller' => 'Categories', 'action' => 'view', $transaction->category->id]) : '' ?>
                     </td>
-                    <td><?= h($transaction->title) ?></td>
                     <td><?= $this->Number->format($transaction->balance) ?></td>
-                    <td><?= $this->Number->format($transaction->parent) ?></td>
                     <td><?= h($transaction->done_date) ?></td>
                     <td><?= h($transaction->created) ?></td>
                     <td class="actions">

@@ -78,7 +78,7 @@ Router::scope('/', function ($routes) {
             '/change-current-wallet', ['controller' => 'Wallets', 'action' => 'changeCurrentWallet'], ['_name' => 'changeWallet']
     );
     $routes->connect(
-            '/transfer-money', ['controller' => 'Wallets', 'action' => 'transferMoney'], ['_name' => 'transferMoney']
+            '/transfer-money', ['controller' => 'Transactions', 'action' => 'transferMoney'], ['_name' => 'transferMoney']
     );
     /**
      * Connect catchall routes for all controllers.

@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-use App\Model\Table\WalletsTable;
+use App\Model\Entity\Transaction;
 
 /**
  * Transactions Controller
@@ -20,6 +20,8 @@ class TransactionsController extends AppController
     {
         parent::initialize();
         $this->loadModel('Users');
+        $this->loadModel('Categories');
+        $this->loadModel('Wallets');
     }
 
     /**
@@ -29,8 +31,7 @@ class TransactionsController extends AppController
      */
     public function index()
     {
-        $id = $this->Auth->user('id');
-        $user = $this->Users->find()->where(['id' => $id])->first();
+        $user = $this->getCurrentUserInfo();
         $this->paginate = [
             'conditions' => [
                 'Transactions.wallet_id' => $user->last_wallet,
@@ -45,7 +46,7 @@ class TransactionsController extends AppController
             'limit' => 200
         ]);
         $last_wallet = $user->last_wallet;
-        $this->set(compact('wallets','last_wallet'));
+        $this->set(compact('wallets', 'last_wallet'));
         $this->set('_serialize', ['transactions']);
     }
 
@@ -72,8 +73,7 @@ class TransactionsController extends AppController
      */
     public function add()
     {
-        $id = $this->Auth->user('id');
-        $user = $this->Users->find()->where(['id' => $id])->first();
+        $user = $this->getCurrentUserInfo();
         $transaction = $this->Transactions->newEntity();
         if ($this->request->is('post')) {
             $transaction = $this->Transactions->patchEntity($transaction, $this->request->data);
@@ -88,7 +88,7 @@ class TransactionsController extends AppController
         }
         $categories = $this->Transactions->Categories->find('list', [
             'conditions' => [
-                'Categories.wallet_id' => $this->$user['last_wallet']
+                'Categories.wallet_id' => $user->last_wallet,
             ],
             'limit' => 200]);
         $this->set(compact('transaction', 'categories'));
@@ -141,6 +141,63 @@ class TransactionsController extends AppController
     }
 
     /**
+     *  Transfer money between wallets
+     * 
+     * return void
+     */
+    public function transferMoney()
+    {
+        $user = $this->getCurrentUserInfo();
+        $transaction = $this->Transactions->newEntity();
+        if ($this->request->is('post')) {
+            $data = $this->request->data;
+            $receiver_wallet = $this->Wallets->getReceiverWallet($data['to_wallet']);
+            $transfer_wallet = $this->Wallets->getTransferWallet($data['from_wallet']);
+            
+            $transfer_transaction = $this->Transactions->newEntity([
+                'wallet_id' => $transfer_wallet->id,
+                'category_id' => $data['category_id'],
+                'title' => __('Transfer Money'),
+                'balance' => $data['balance'],
+                'note' => __('Transfer money to ') . $receiver_wallet->title,
+            ]);
+            
+            $receiver_transaction = $this->Transactions->newEntity([
+                'wallet_id' => $receiver_wallet->id,
+                'category_id' => $this->Categories->getReceiverCategoryId($receiver_wallet->id),
+                'title' => __('Transfer Money'),
+                'balance' => $data['balance'],
+                'note' => __('Received from ') . $transfer_wallet->title,
+            ]);
+
+            $transfer_wallet->init_balance = $transfer_wallet->init_balance - $transfer_transaction->balance;
+            $receiver_wallet->init_balance = $receiver_wallet->init_balance + $receiver_transaction->balance;
+//            var_dump($receiver_wallet); var_dump($receiver_transaction);die;
+            if ($this->Transactions-> saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)) {
+                $this->Flash->success(__('The transaction has been saved.'));
+                return $this->redirect(['action' => 'index']);
+            } else {
+                $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
+            }
+        }
+//        $categories = $this->Transactions->Categories->find('list', [
+//            'conditions' => [
+//                'Categories.wallet_id' => $user->last_wallet,
+//            ],
+//            'limit' => 200]);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
+        $wallets = $this->Transactions->Wallets->find('list', [
+            'conditions' => [
+                'Wallets.user_id' => $user->id,
+            ],
+            'limit' => 200]);
+//        pr($categories);die;
+        $this->set(compact('wallets', 'expense_categories', 'user', 'transaction'));
+        $this->set('_serialize', ['transaction']);
+        $this->set('title', __('Transfer Money Between Wallets'));
+    }
+
+    /**
      * Authorization logic for transactions
      * 
      * @param type $user
@@ -150,9 +207,8 @@ class TransactionsController extends AppController
     {
         $action = $this->request->params['action'];
 
-
         // The add and index actions are always allowed.
-        if (in_array($action, [ 'index', 'view', 'add', 'edit'])) {
+        if (in_array($action, [ 'index', 'view', 'add', 'edit', 'transferMoney'])) {
             return true;
         }
         // All other actions require an id.

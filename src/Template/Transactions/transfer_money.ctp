@@ -1,5 +1,4 @@
 <?= $this->assign('title', $title) ?>
-<?php var_dump($categories);die; ?>
 <div class="actions columns large-2 medium-3">
     <h3><?= __('Actions') ?></h3>
     <ul class="side-nav">
@@ -15,11 +14,11 @@
     <fieldset>
         <legend><?= __('Transfer money between wallets') ?></legend>
         <?php
-        echo $this->Form->input('from_wallet', ['options' => $wallets, 'default' => $last_wallet]);
+        echo $this->Form->input('from_wallet', ['options' => $wallets, 'default' => $user->last_wallet]);
         echo $this->Form->input('to_wallet', ['options' => $wallets, 'default' => __('Select wallet')]);
-        echo $this->Form->input('transfer_value');
+        echo $this->Form->input('balance');
         echo $this->Form->input('note');
-        echo $this->Form->input('category_id', ['options' => $categories, 'default' => __('Select wallet')]);
+        echo $this->Form->input('category_id', ['options' => $expense_categories, 'default' => 1]);
         echo $this->Form->input('done_date');
         ?>
     </fieldset>

@@ -95,4 +95,12 @@ class TransactionsTable extends Table
         return $rules;
     }
 
+    public function saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)
+    {
+        if($this->save($transfer_transaction) && $this->save($receiver_transaction) && $this->Wallets->save($transfer_wallet) && $this->Wallets->save($receiver_wallet)){
+            return true;
+        }
+        return false;
+    }
+
 }

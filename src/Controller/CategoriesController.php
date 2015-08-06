@@ -11,14 +11,15 @@ use App\Controller\AppController;
  */
 class CategoriesController extends AppController
 {
-
-    /**
+        /**
      * Load Model
      */
     public function initialize()
     {
         parent::initialize();
         $this->loadModel('Users');
+        $this->loadModel('Transactions');
+        $this->loadModel('Wallets');
     }
 
     /**
@@ -28,10 +29,15 @@ class CategoriesController extends AppController
      */
     public function index()
     {
-        $id = $this->Auth->user('id');
-        $user = $this->Users->find()->where(['id' => $id])->first();
+        $user = $this->getCurrentUserInfo();
         $this->paginate = [
-            'contain' => ['Types']
+            'conditions' => [
+                  'Categories.wallet_id' => $user->last_wallet,
+            ],
+            'order' => [
+                'Categories.id' => 'asc'
+            ],
+            'contain' => ['Types','Wallets'],
         ];
         $wallets = $this->Categories->Wallets->find('list', [
             'conditions' => [
@@ -55,6 +61,21 @@ class CategoriesController extends AppController
         $category = $this->Categories->get($id, [
             'contain' => ['Wallets', 'Types', 'Transactions']
         ]);
+        $user = $this->getCurrentUserInfo();
+        $this->paginate = [
+            'conditions' => [
+                'Transactions.wallet_id' => $user->last_wallet,
+            ],
+            'contain' => ['Categories']
+        ];
+        $this->set('transactions', $this->paginate($this->Transactions));
+        $categories = $this->Categories->find('list', [
+            'conditions' => [
+                'Categories.wallet_id' => $user->id
+            ],
+            'limit' => 200
+        ]);
+        $this->set(compact('categories'));
         $this->set('category', $category);
         $this->set('_serialize', ['category']);
     }
