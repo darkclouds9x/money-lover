@@ -16,7 +16,7 @@
             echo $this->Form->input('title');
             echo $this->Form->input('wallet_id', ['options' => $wallets]);
             echo $this->Form->input('type_id');
-            echo $this->Form->input('parent');
+            echo $this->Form->input('parent',['options' => $categories]);
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

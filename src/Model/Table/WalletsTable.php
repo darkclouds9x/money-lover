@@ -56,7 +56,7 @@ class WalletsTable extends Table
                 ->allowEmpty('id', 'create');
 
         $validator
-                ->allowEmpty('title');
+                ->notEmpty('title');
 
         $validator
                 ->add('init_balance', 'valid', ['rule' => 'numeric'])
@@ -65,7 +65,6 @@ class WalletsTable extends Table
 
         $validator
                 ->add('is_current', 'valid', ['rule' => 'numeric'])
-                ->requirePresence('is_current', 'create')
                 ->allowEmpty('is_current');
 
         $validator
@@ -114,10 +113,28 @@ class WalletsTable extends Table
         $receiver_wallet = $this->find()->where(['id' => $to_wallet])->first();
         return $receiver_wallet;
     }
+
+    /**
+     * Get transfered wallet
+     * 
+     * @param type $from_wallet
+     * @return type
+     */
     public function getTransferWallet($from_wallet)
     {
         $transfer_wallet = $this->find()->where(['id' => $from_wallet])->first();
         return $transfer_wallet;
     }
 
+    /**
+     * Get current wallet method
+     * 
+     * @param type $user
+     * @return type
+     */
+    public function getCurrentWallet($user)
+    {
+        $currentWallet = $this->find()->where(['id' => $user->last_wallet])->first();
+        return $currentWallet;
+    }
 }

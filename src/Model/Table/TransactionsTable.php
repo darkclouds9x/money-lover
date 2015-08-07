@@ -95,12 +95,63 @@ class TransactionsTable extends Table
         return $rules;
     }
 
+    /**
+     * Save transfer money method
+     * 
+     * @param type $transfer_wallet
+     * @param type $receiver_wallet
+     * @param type $transfer_transaction
+     * @param type $receiver_transaction
+     * @return boolean
+     */
     public function saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)
     {
-        if($this->save($transfer_transaction) && $this->save($receiver_transaction) && $this->Wallets->save($transfer_wallet) && $this->Wallets->save($receiver_wallet)){
+        if ($this->save($transfer_transaction) && $this->save($receiver_transaction) && $this->Wallets->save($transfer_wallet) && $this->Wallets->save($receiver_wallet)) {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Get all transactions of month
+     * 
+     * @param type $wallet_id
+     * @param type $list_month
+     * @param type $list_year
+     * @return type
+     */
+    public function getTransactionsOfMonth($wallet_id, $list_month, $list_year)
+    {
+//        $transactions = $this->find()->where([
+//                    'Transactions.wallet_id' => $wallet_id,
+//                    'MONTH(Transactions.created)' => $list_month,
+//                    'YEAR(Transactions.created)' => $list_year,
+//                ])->contain(['Categories'])->all();
+        $transactions = $this->find('all', [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'MONTH(Transactions.created)' => $list_month,
+                'YEAR(Transactions.created)' => $list_year,
+            ],
+            'contain' => ['Categories']
+        ]);
+        return $transactions;
+    }
+
+    /**
+     * Soft delete all transactions of a category
+     * 
+     * @param type $category_id
+     * @return boolean
+     */
+    public function deleteAllTransactionsOfCategory($category_id)
+    {
+        $transactions = $this->find()->where(['category_id' => $category_id])->all();
+        foreach ($transactions as $transaction) {
+            $transaction->status = 0;
+            $this->save($transaction);
+        }
+        return true;
     }
 
 }

@@ -15,7 +15,7 @@
             <th><?= $this->Paginator->sort('id') ?></th>
             <th><?= $this->Paginator->sort('title') ?></th>
             <th><?= $this->Paginator->sort('init_balance') ?></th>
-            <th><?= $this->Paginator->sort('is_current') ?></th>
+            <th><?= $this->Paginator->sort('current_balance') ?></th>
             <th><?= $this->Paginator->sort('created') ?></th>
             <th><?= $this->Paginator->sort('modified') ?></th>
             <th class="actions"><?= __('Actions') ?></th>
@@ -27,7 +27,7 @@
             <td><?= $this->Number->format($wallet->id) ?></td>
             <td><?= h($wallet->title) ?></td>
             <td><?= $this->Number->format($wallet->init_balance) ?></td>
-            <td><?= $this->Number->format($wallet->is_current) ?></td>
+            <td><?= $this->Number->format($wallet->current_balance) ?></td>
             <td><?= h($wallet->created) ?></td>
             <td><?= h($wallet->modified) ?></td>
             <td class="actions">

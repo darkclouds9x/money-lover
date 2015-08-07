@@ -30,6 +30,7 @@ class WalletsController extends AppController
         $this->paginate = [
             'conditions' => [
                 'Wallets.user_id' => $this->Auth->user('id'),
+                'Wallets.status' => 1,
             ]
         ];
         $this->set('wallets', $this->paginate($this->Wallets));
@@ -64,7 +65,7 @@ class WalletsController extends AppController
         if ($this->request->is('post')) {
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
             $wallet->user_id = $user->id;
-
+            $wallet->current_balance = $wallet->init_balance;
             if ($this->Wallets->save($wallet)) {
 
                 //Add wallet after first
@@ -122,7 +123,7 @@ class WalletsController extends AppController
     }
 
     /**
-     * Delete method
+     * Soft Delete method
      *
      * @param string|null $id Wallet id.
      * @return void Redirects to index.
@@ -132,7 +133,8 @@ class WalletsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $wallet = $this->Wallets->get($id);
-        if ($this->Wallets->delete($wallet)) {
+        $wallet->id = 0;
+        if ($this->Wallets->save($wallet) && $this->Categories->deleteAllCategoriesOfWallet($wallet->id)) {
             $this->Flash->success(__('The wallet has been deleted.'));
         } else {
             $this->Flash->error(__('The wallet could not be deleted. Please, try again.'));

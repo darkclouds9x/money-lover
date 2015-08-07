@@ -11,7 +11,8 @@ use App\Controller\AppController;
  */
 class CategoriesController extends AppController
 {
-        /**
+
+    /**
      * Load Model
      */
     public function initialize()
@@ -32,12 +33,13 @@ class CategoriesController extends AppController
         $user = $this->getCurrentUserInfo();
         $this->paginate = [
             'conditions' => [
-                  'Categories.wallet_id' => $user->last_wallet,
+                'Categories.wallet_id' => $user->last_wallet,
+                'Categories.status' => 1,
             ],
             'order' => [
                 'Categories.id' => 'asc'
             ],
-            'contain' => ['Types','Wallets'],
+            'contain' => ['Types', 'Wallets'],
         ];
         $wallets = $this->Categories->Wallets->find('list', [
             'conditions' => [
@@ -65,6 +67,7 @@ class CategoriesController extends AppController
         $this->paginate = [
             'conditions' => [
                 'Transactions.wallet_id' => $user->last_wallet,
+                'Transactions.category_id' => $id
             ],
             'contain' => ['Categories']
         ];
@@ -87,6 +90,7 @@ class CategoriesController extends AppController
      */
     public function add()
     {
+        $user = $this->getCurrentUserInfo();
         $category = $this->Categories->newEntity();
         if ($this->request->is('post')) {
             $category = $this->Categories->patchEntity($category, $this->request->data);
@@ -103,8 +107,11 @@ class CategoriesController extends AppController
                 'Wallets.user_id' => $this->Auth->user('id')
             ],
             'limit' => 200]);
+        $categories = $this->Categories->find('list')->where([
+                    'wallet_id' => $user->last_wallet
+                ])->all();
         $types = $this->Categories->Types->find('list', ['limit' => 2]);
-        $this->set(compact('category', 'wallets', 'types'));
+        $this->set(compact('category', 'wallets', 'types','categories'));
         $this->set('_serialize', ['category']);
     }
 
@@ -147,7 +154,8 @@ class CategoriesController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $category = $this->Categories->get($id);
-        if ($this->Categories->delete($category)) {
+        $category->status =0;
+        if ($this->Categories->save($category) && $this->Transactions->deleteAllTransactionsOfCategory($category->id)) {
             $this->Flash->success(__('The category has been deleted.'));
         } else {
             $this->Flash->error(__('The category could not be deleted. Please, try again.'));

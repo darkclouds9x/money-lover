@@ -15,9 +15,6 @@
         <?php
             echo $this->Form->input('title');
             echo $this->Form->input('init_balance');
-            echo $this->Form->input('is_current');
-            echo $this->Form->input('deleted', ['empty' => true, 'default' => '']);
-            echo $this->Form->input('status');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

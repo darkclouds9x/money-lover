@@ -195,4 +195,21 @@ class CategoriesTable extends Table
             ])->first();
     return $receiver_category->id;
     }
+    
+    /**
+     * Soft delete 
+     * 
+     * @param type $wallet_id
+     * @return boolean
+     */
+    public function deleteAllCategoriesOfWallet($wallet_id)
+    {
+        $categories = $this->find()->where(['wallet_id' => $wallet_id])->all();
+        foreach ($categories as $category) {
+            $this->Transactions->deleteAllTransactionsOfCategory($category->id);
+            $category->status = 0;
+            $this->save($category);
+        }
+        return true;
+    }
 }

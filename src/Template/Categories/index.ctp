@@ -16,22 +16,19 @@
                 <th><?= $this->Paginator->sort('title') ?></th>
                 <th><?= $this->Paginator->sort('wallet_id') ?></th>
                 <th><?= $this->Paginator->sort('type_id') ?></th>
-                <th><?= $this->Paginator->sort('parent') ?></th>
-                <th><?= $this->Paginator->sort('is_locked') ?></th>
                 <th><?= $this->Paginator->sort('created') ?></th>
                 <th class="actions"><?= __('Actions') ?></th>
             </tr>
         </thead>
         <tbody>
+            <?php foreach ($categories as $category): ?>
                 <tr>
                     <td><?= $this->Number->format($category->id) ?></td>
                     <td><?= $this->Html->link($category->title, ['controller' => 'Categories', 'action' => 'view', $category->id]) ?></td>
                     <td>
                         <?= $category->has('wallet') ? $this->Html->link($category->wallet->title, ['controller' => 'Wallets', 'action' => 'view', $category->wallet->id]) : '' ?>
                     </td>
-                    <td><?= $this->Number->format($category->type_id) ?></td>
-                    <td><?= $this->Number->format($category->parent) ?></td>
-                    <td><?= $this->Number->format($category->is_locked) ?></td>
+                    <td><?= h($category->type->title) ?></td>
                     <td><?= h($category->created) ?></td>
                     <td class="actions">
                         <?php if ($category->is_locked == 1): ?>
@@ -43,6 +40,7 @@
                         <?php endif ?>
                     </td>
                 </tr>
+                <?php endforeach; ?>
         </tbody>
     </table>
     <div class="paginator">
