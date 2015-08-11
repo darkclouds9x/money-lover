@@ -122,18 +122,72 @@ class TransactionsTable extends Table
      */
     public function getTransactionsOfMonth($wallet_id, $list_month, $list_year)
     {
-//        $transactions = $this->find()->where([
-//                    'Transactions.wallet_id' => $wallet_id,
-//                    'MONTH(Transactions.created)' => $list_month,
-//                    'YEAR(Transactions.created)' => $list_year,
-//                ])->contain(['Categories'])->all();
         $transactions = $this->find('all', [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
-                'MONTH(Transactions.created)' => $list_month,
-                'YEAR(Transactions.created)' => $list_year,
+                'Transactions.status' => 1,
+                'MONTH(Transactions.done_date)' => $list_month,
+                'YEAR(Transactions.done_date)' => $list_year,
             ],
             'contain' => ['Categories']
+        ]);
+        return $transactions;
+    }
+
+    /**
+     * Get all transactions before month
+     * 
+     * @param type $wallet_id
+     * @param type $list_month
+     * @param type $list_year
+     * @return type
+     */
+    public function getTransactionsBeforeMonth($wallet_id, $list_month, $list_year)
+    {
+        $transactions = $this->find('all', [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'MONTH(Transactions.done_date) <' => $list_month,
+                'YEAR(Transactions.done_date) <=' => $list_year,
+            ],
+            'contain' => ['Categories']
+        ]);
+        return $transactions;
+    }
+
+    /**
+     * Get all transactions before month
+     * 
+     * @param type $wallet_id
+     * @param type $list_month
+     * @param type $list_year
+     * @return type
+     */
+    public function getTransactionsAfterMonth($wallet_id, $list_month, $list_year)
+    {
+        $transactions = $this->find('all', [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'MONTH(Transactions.done_date) >' => $list_month,
+                'YEAR(Transactions.done_date) >=' => $list_year,
+            ],
+            'contain' => ['Categories']
+        ]);
+        return $transactions;
+    }
+
+    /**
+     * Get all transactions of wallets
+     */
+    public function getAllTransactionsOfWallet($wallet_id)
+    {
+        $transactions = $this->find('all', [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+            ]
         ]);
         return $transactions;
     }
@@ -154,4 +208,58 @@ class TransactionsTable extends Table
         return true;
     }
 
+    /**
+     * Computing income,expense, balance of month
+     * 
+     * @param type $transactions
+     * @return type
+     */
+    public function computingIncomeAndExpense($transactions)
+    {
+        $income = (float) 0;
+        $expense = (float) 0;
+        foreach ($transactions as $transaction) {
+            if ($transaction->category->type_id == 1) {
+                $income = $income + $transaction->balance;
+            } elseif ($transaction->category->type_id == 2) {
+                $expense = $expense + $transaction->balance;
+            }
+        }
+        $balance = $income - $expense;
+        return [$income, $expense, $balance];
+    }
+
+    /**
+     * Monthly report method
+     * 
+     * @param type $wallet
+     * @param type $list_month
+     * @param type $list_year
+     * @return type
+     */
+    public function monthlyReport($wallet, $list_month, $list_year)
+    {
+        $before_transactions = $this->getTransactionsBeforeMonth($wallet->id, $list_month, $list_year);
+        $current_transactions = $this->getTransactionsOfMonth($wallet->id, $list_month, $list_year);
+
+        $before_report = $this->computingIncomeAndExpense($before_transactions);
+        $current_report = $this->computingIncomeAndExpense($current_transactions);
+
+        $opening_balance = $wallet->init_balance + $before_report[2];
+        $ending_balance = $wallet->init_balance + $current_report[2];
+
+        return [$opening_balance, $ending_balance, $current_report[0], $current_report[1], $current_report[2]];
+    }
+
+    /**
+     * Computing total report
+     * @param type $wallet_id
+     * @return type
+     */
+    public function totalReport($wallet_id)
+    {
+        $transactions = $this->getAllTransactionsOfWallet($wallet_id);
+        $total_report = $this->computingIncomeAndExpense($transactions);
+        return $total_report;
+    }
 }

@@ -60,10 +60,17 @@ class CategoriesController extends AppController
      */
     public function view($id = null)
     {
-        $category = $this->Categories->get($id, [
+        $user = $this->getCurrentUserInfo();
+
+        if ($this->request->is('post')) {
+
+            $id = $this->request->data;
+        }
+        $current_category = $this->Categories->get($id, [
             'contain' => ['Wallets', 'Types', 'Transactions']
         ]);
-        $user = $this->getCurrentUserInfo();
+        $income_categories = $this->Categories->getListIncomeCategories($user);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
         $this->paginate = [
             'conditions' => [
                 'Transactions.wallet_id' => $user->last_wallet,
@@ -72,14 +79,15 @@ class CategoriesController extends AppController
             'contain' => ['Categories']
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
-        $categories = $this->Categories->find('list', [
+        $categories = $this->Categories->find('all', [
             'conditions' => [
-                'Categories.wallet_id' => $user->id
+                'Categories.wallet_id' => $user->last_wallet
             ],
             'limit' => 200
-        ]);
-        $this->set(compact('categories'));
-        $this->set('category', $category);
+        ])->all();
+//        var_dump((array)$categories);die;
+        $this->set(compact('categories', 'current_category', 'income_categories', 'expense_categories'));
+        $this->set('current_category', $current_category);
         $this->set('_serialize', ['category']);
     }
 
@@ -111,7 +119,7 @@ class CategoriesController extends AppController
                     'wallet_id' => $user->last_wallet
                 ])->all();
         $types = $this->Categories->Types->find('list', ['limit' => 2]);
-        $this->set(compact('category', 'wallets', 'types','categories'));
+        $this->set(compact('category', 'wallets', 'types', 'categories'));
         $this->set('_serialize', ['category']);
     }
 
@@ -154,7 +162,7 @@ class CategoriesController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $category = $this->Categories->get($id);
-        $category->status =0;
+        $category->status = 0;
         if ($this->Categories->save($category) && $this->Transactions->deleteAllTransactionsOfCategory($category->id)) {
             $this->Flash->success(__('The category has been deleted.'));
         } else {

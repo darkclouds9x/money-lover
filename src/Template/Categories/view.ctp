@@ -1,8 +1,8 @@
 <div class="actions columns large-2 medium-3">
     <h3><?= __('Actions') ?></h3>
     <ul class="side-nav">
-        <li><?= $this->Html->link(__('Edit Category'), ['action' => 'edit', $category->id]) ?> </li>
-        <li><?= $this->Form->postLink(__('Delete Category'), ['action' => 'delete', $category->id], ['confirm' => __('Are you sure you want to delete # {0}?', $category->id)]) ?> </li>
+        <li><?= $this->Html->link(__('Edit Category'), ['action' => 'edit', $current_category->id]) ?> </li>
+        <li><?= $this->Form->postLink(__('Delete Category'), ['action' => 'delete', $current_category->id], ['confirm' => __('Are you sure you want to delete # {0}?', $current_category->id)]) ?> </li>
         <li><?= $this->Html->link(__('List Categories'), ['action' => 'index']) ?> </li>
         <li><?= $this->Html->link(__('New Category'), ['action' => 'add']) ?> </li>
         <li><?= $this->Html->link(__('List Wallets'), ['controller' => 'Wallets', 'action' => 'index']) ?> </li>
@@ -11,14 +11,31 @@
         <li><?= $this->Html->link(__('New Transaction'), ['controller' => 'Transactions', 'action' => 'add']) ?> </li>
     </ul>
 </div>
+
 <div class="categories index large-10 medium-9 columns">
     <?=
     $this->Form->create(null, [
-        'url' => ['_name' => 'changeWallet']
+        'url' => ['controller' => 'categories', 'action' => 'view']
     ])
     ?>
-    <?php echo $this->Form->input('id', ['options' => $categories, 'default' => $category->id]); ?>
-    <?= $this->Form->button(__('Change wallet')) ?>
+    <?php 
+    foreach ($income_categories as $income_category){
+        
+    }
+        
+    var_dump($income_categories);
+    $options = [
+        __('Income Category') => $income_categories,
+        __('Expense Category') => $expense_categories,
+    ];?>
+    <div class="row">
+        <div class="col-sm-6">
+            <?php echo $this->Form->select(__('Category'), $options) ?>
+        </div>
+        <div class="text-center">
+            <?= $this->Form->button(__('Change category')) ?>
+        </div>
+    </div>
     <?= $this->Form->end() ?>
 
     <table cellpadding="0" cellspacing="0">
@@ -63,3 +80,6 @@
         <p><?= $this->Paginator->counter() ?></p>
     </div>
 </div>
+<script>
+    
+</script>

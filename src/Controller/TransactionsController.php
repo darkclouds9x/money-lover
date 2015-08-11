@@ -38,16 +38,20 @@ class TransactionsController extends AppController
         $current_month = Time::now()->month;
         $current_year = Time::now()->year;
         $current_wallet = $this->Wallets->getCurrentWallet($user);
+
         if (empty($list_month) || empty($list_year)) {
             $list_month = $current_month;
             $list_year = $current_year;
+        }
+        if ($current_wallet->checkCreatedWallet($list_month,$list_year) == false) {
+            $current_wallet->init_balance = $current_wallet->current_balance = 0;
         }
         $this->paginate = [
             'conditions' => [
                 'Transactions.wallet_id' => $user->last_wallet,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.created)' => $list_month,
-                'YEAR(Transactions.created)' => $list_year,
+                'MONTH(Transactions.done_date)' => $list_month,
+                'YEAR(Transactions.done_date)' => $list_year,
             ],
             'contain' => ['Categories.Types']
         ];
@@ -58,9 +62,9 @@ class TransactionsController extends AppController
             ],
             'limit' => 200
         ]);
-        $mothly_reports = $this->monthlyReport($current_wallet, $list_month, $list_year);
+        $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $list_month, $list_year);
         $last_wallet = $user->last_wallet;
-        $this->set(compact('wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports'));
+        $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports'));
         $this->set('_serialize', ['transactions']);
         $this->set('title', __('Monthly Report'));
     }
@@ -102,7 +106,6 @@ class TransactionsController extends AppController
             } elseif ($category->type_id == 2) {
                 $wallet->current_balance = $wallet->current_balance - $transaction->balance;
             }
-//            var_dump($this->begin($this->Transactions->save($transaction)));
             if ($this->Transactions->save($transaction) && $this->Wallets->save($wallet)) {
                 $this->Flash->success(__('The transaction has been saved.'));
 //                $this->commit();
@@ -158,7 +161,7 @@ class TransactionsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $transaction = $this->Transactions->get($id);
-        $transaction->id = 0;
+        $transaction->status = 0;
         if ($this->Transactions->save($transaction)) {
             $this->Flash->success(__('The transaction has been deleted.'));
         } else {
@@ -196,9 +199,10 @@ class TransactionsController extends AppController
                 'balance' => $data['balance'],
                 'note' => __('Received from ') . $transfer_wallet->title,
             ]);
-
-            $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->balance;
-            $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->balance;
+            if ($transfer_wallet->checkCreatedWallet($data['month'], $data['year'])) {
+                $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->balance;
+                $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->balance;
+            }
             if ($this->Transactions->saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
                 return $this->redirect(['action' => 'index']);
@@ -244,33 +248,6 @@ class TransactionsController extends AppController
             return true;
         }
         return parent::isAuthorized($user);
-    }
-
-    /**
-     * Monthly report method
-     * 
-     * @param type $wallet
-     * @param type $list_month
-     * @param type $list_year
-     * @return type
-     */
-    public function monthlyReport($wallet, $list_month, $list_year)
-    {
-
-        $transactions = $this->Transactions->getTransactionsOfMonth($wallet->id, $list_month, $list_year);
-        $income = (float) 0;
-        $expense = (float) 0;
-        foreach ($transactions as $transaction) {
-//                            var_dump($transaction->category->type_id);die;
-
-            if ($transaction->category->type_id == 1) {
-                $income = $income + $transaction->balance;
-            } elseif ($transaction->category->type_id == 2) {
-                $expense = $expense + $transaction->balance;
-            }
-        }
-//        $current_balance = $wallet->init_balance + $income - $expense;
-        return [$wallet->init_balance, $income, $expense, $wallet->current_balance];
     }
 
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Model\Entity;
 
 use Cake\ORM\Entity;
@@ -18,4 +19,19 @@ class Wallet extends Entity
         '*' => true,
         'id' => false,
     ];
+
+    /*
+     * Check exist of wallet.
+     * return bolean
+     */
+
+    public function checkCreatedWallet($month, $year)
+    {
+        if (($month < $this->created->month) && ($year <= $this->created->year)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 }

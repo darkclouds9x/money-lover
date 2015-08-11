@@ -10,14 +10,36 @@
     </ul>
 </div>
 <div class="transactions index large-10 medium-9 columns">
-    <div class="change-wallet">
+    <div class=" row change-wallet">
         <?=
         $this->Form->create(null, [
             'url' => ['_name' => 'changeWallet']
         ])
         ?>
-        <?php echo $this->Form->input('wallet_id', ['options' => $wallets, 'default' => $last_wallet]); ?>
-        <?= $this->Form->button(__('Change wallet')) ?>
+        <div class="col-sm-4">
+            <?php echo $this->Form->input('wallet_id', ['options' => $wallets, 'default' => $last_wallet]); ?>
+            <?= $this->Form->button(__('Change wallet')) ?>
+        </div>
+        <div class="col-sm-8">
+            <div class=" row statistic">
+                <div class="col-sm-6 col-sm-offset-3">
+                    <table class="table table-hover table-bordered table-responsive">
+                        <thead>
+                            <tr>
+                                <th class="text-center"><?= __('Init balance') ?></th>
+                                <th class="text-center"><?= __('Current Balance') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center"><?php echo $current_wallet->init_balance; ?></td>
+                                <td class="text-center"><?php echo $current_wallet->current_balance; ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         <?= $this->Form->end() ?>
     </div>
 
@@ -57,10 +79,11 @@
                     <table class="table table-hover table-bordered table-responsive">
                         <thead>
                             <tr>
-                                <th class="text-center"><?= __('Init Balance') ?></th>
+                                <th class="text-center"><?= __('Openning Balance') ?></th>
+                                <th class="text-center"><?= __('Ending Balance') ?></th>
                                 <th class="text-center"><?= __('Income') ?></th>
                                 <th class="text-center"><?= __('Expense') ?></th>
-                                <th class="text-center"><?= __('Curent Balance') ?></th>
+                                <th class="text-center"><?= __('Balance') ?></th>
                             </tr>
                         </thead>
                         <tbody>
