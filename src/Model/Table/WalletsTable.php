@@ -110,7 +110,7 @@ class WalletsTable extends Table
      */
     public function getReceiverWallet($to_wallet)
     {
-        $receiver_wallet = $this->find()->where(['id' => $to_wallet])->first();
+        $receiver_wallet = $this->find()->where(['id' => $to_wallet, 'status' => 1])->first();
         return $receiver_wallet;
     }
 
@@ -122,7 +122,7 @@ class WalletsTable extends Table
      */
     public function getTransferWallet($from_wallet)
     {
-        $transfer_wallet = $this->find()->where(['id' => $from_wallet])->first();
+        $transfer_wallet = $this->find()->where(['id' => $from_wallet, 'status' => 1])->first();
         return $transfer_wallet;
     }
 
@@ -137,4 +137,22 @@ class WalletsTable extends Table
         $currentWallet = $this->find()->where(['id' => $user->last_wallet])->first();
         return $currentWallet;
     }
+
+    /**
+     * Get all wallets of method
+     * 
+     * @param type $user
+     * @return type
+     */
+    public function getAllWalletsOfUser($user)
+    {
+        $wallets = $this->Transactions->Wallets->find('list', [
+            'conditions' => [
+                'Wallets.user_id' => $user->id
+            ],
+            'limit' => 200
+        ]);
+        return $wallets;
+    }
+
 }

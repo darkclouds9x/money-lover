@@ -36,13 +36,13 @@ class User extends Entity
     /**
      * Create veriction_code method
      * 
-     * @param type $verication_code
+     * @param string $email
      * @return type
      */
-    public function createValicationCode()
+    public function createToken($email)
     {
-        $verication_code =  md5(uniqid("yourrandomstringyouwanttoaddhere", true));
-        return $verication_code;
+        $verification_code =  sha1(uniqid($email, true));
+        return $verification_code;
     }
 
 }

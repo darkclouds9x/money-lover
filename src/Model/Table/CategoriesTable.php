@@ -7,6 +7,9 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
+use Cake\ORM\TableRegistry;
+use Cake\Database\Exception;
 
 /**
  * Categories Model
@@ -98,14 +101,12 @@ class CategoriesTable extends Table
      */
     public function addDefaultCategories($wallet)
     {
-
         $difference_income = new Category([
             'title' => __('Diffference'),
             'wallet_id' => $wallet->id,
             'type_id' => 1,
             'is_locked' => 1,
         ]);
-
         $difference_expense = new Category([
             'title' => __('Diffference'),
             'wallet_id' => $wallet->id,
@@ -156,11 +157,12 @@ class CategoriesTable extends Table
     public function getListIncomeCategories($user)
     {
         $income_categories = $this->find('list', [
-            'conditions' => [
-                'Categories.wallet_id' => $user->last_wallet,
-                'Categories.type_id' => 1,
-            ],
-            'limit' => 200]);
+                    'conditions' => [
+                        'Categories.wallet_id' => $user->last_wallet,
+                        'Categories.type_id' => 1,
+                        'Categories.status' => 1,
+                    ],
+                    'limit' => 200])->toArray();
         return $income_categories;
     }
 
@@ -172,11 +174,12 @@ class CategoriesTable extends Table
     public function getListExpenseCategories($user)
     {
         $expense_categories = $this->find('list', [
-            'conditions' => [
-                'Categories.wallet_id' => $user->last_wallet,
-                'Categories.type_id' => 2,
-            ],
-            'limit' => 200]);
+                    'conditions' => [
+                        'Categories.wallet_id' => $user->last_wallet,
+                        'Categories.type_id' => 2,
+                        'Categories.status' => 1,
+                    ],
+                    'limit' => 200])->toArray();
         return $expense_categories;
     }
 
@@ -189,13 +192,14 @@ class CategoriesTable extends Table
     public function getReceiverCategoryId($receiver_wallet_id)
     {
         $receiver_category = $this->find()->where([
-                'Categories.wallet_id' => $receiver_wallet_id,
-                'Categories.title' => 'Received',
-                'Categories.is_locked' => 1,
-            ])->first();
-    return $receiver_category->id;
+                    'Categories.wallet_id' => $receiver_wallet_id,
+                    'Categories.title' => 'Received',
+                    'Categories.is_locked' => 1,
+                    'Categories.status' => 1,
+                ])->first();
+        return $receiver_category->id;
     }
-    
+
     /**
      * Soft delete 
      * 
@@ -204,12 +208,37 @@ class CategoriesTable extends Table
      */
     public function deleteAllCategoriesOfWallet($wallet_id)
     {
-        $categories = $this->find()->where(['wallet_id' => $wallet_id])->all();
-        foreach ($categories as $category) {
-            $this->Transactions->deleteAllTransactionsOfCategory($category->id);
-            $category->status = 0;
-            $this->save($category);
+        $conn = ConnectionManager::get('default');
+        $conn->begin();
+        try {
+            $this->saveCategories($wallet_id);
+            $conn->commit();
+        } catch (Exception $e) {
+            $conn->rollback();
+            return false;
         }
         return true;
     }
+
+    /**
+     * Save many categories
+     * 
+     * @param type $wallet_id
+     * @return boolean
+     */
+    public function saveCategories($wallet_id)
+    {
+        $categoriesTable = TableRegistry::get('Categories');
+        $categories = $categoriesTable->find()->where(['wallet_id' => $wallet_id])->all();
+        $categoriesTable->connection()->transactional(function() use ($categoriesTable, $categories) {
+            foreach ($categories as $categorie) {
+                $categorie->status = 0;
+                if ($categoriesTable->save($categorie, ['atomic' => false]) == false) {
+                    throw new Exception(__("Can't delete all categories of this wallet"));
+                }
+            }
+        });
+        return true;
+    }
+
 }

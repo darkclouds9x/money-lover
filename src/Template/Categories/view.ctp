@@ -13,30 +13,27 @@
 </div>
 
 <div class="categories index large-10 medium-9 columns">
-    <?=
-    $this->Form->create(null, [
-        'url' => ['controller' => 'categories', 'action' => 'view']
-    ])
-    ?>
-    <?php 
-    foreach ($income_categories as $income_category){
-        
-    }
-        
-    var_dump($income_categories);
-    $options = [
-        __('Income Category') => $income_categories,
-        __('Expense Category') => $expense_categories,
-    ];?>
-    <div class="row">
+    <div class="change-category">
+        <?=
+        $this->Form->create(null, [
+            'url' => ['controller' => 'categories', 'action' => 'view']
+        ])
+        ?>
+        <?php
+        $options = [
+            __('Income Category') => $income_categories,
+            __('Expense Category') => $expense_categories,
+        ];
+        ?>
         <div class="col-sm-6">
-            <?php echo $this->Form->select(__('Category'), $options) ?>
+            <?php echo $this->Form->select(__('Category'), $options); ?>
         </div>
         <div class="text-center">
             <?= $this->Form->button(__('Change category')) ?>
         </div>
+        <?= $this->Form->end() ?>
     </div>
-    <?= $this->Form->end() ?>
+
 
     <table cellpadding="0" cellspacing="0">
         <thead>
@@ -81,5 +78,5 @@
     </div>
 </div>
 <script>
-    
+
 </script>

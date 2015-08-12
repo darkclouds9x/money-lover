@@ -8,6 +8,8 @@ use Cake\Network\Email\Email;
 use Cake\Validation\Validator;
 use App\Model\Entity\User;
 
+//use Cake\Mailer\Email;
+
 /**
  * Users Controller
  *
@@ -23,6 +25,7 @@ class UsersController extends AppController
      */
     public function index()
     {
+
         $this->set('users', $this->paginate($this->Users));
         $this->set('_serialize', ['users']);
     }
@@ -53,27 +56,12 @@ class UsersController extends AppController
      */
     public function add()
     {
-//        $user = $this->Users->newEntity();
-//        if ($this->request->is('post')) {
-//            $user = $this->Users->patchEntity($user, $this->request->data);
-//            if ($this->Users->save($user)) {
-//                $this->Flash->success(__('The user has been saved.'));
-//                $email = new Email('gmail');
-//                $email->from(['thanhnt@rikkeisoft.com' => 'My Site'])
-//                        ->to('thanhnt07.vn@gmail.com')
-//                        ->subject('About')
-//                        ->send('My message');
-//                return $this->redirect(['_name' => 'home']);
-//            } else {
-//                $this->Flash->error(__('The user could not be saved. Please, try again.'));
-//            }
-//        }
-//        $this->set(compact('user'));
-//        $this->set('_serialize', ['user']);
         $user = $this->Users->newEntity();
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
+            $user['token'] = $user->createToken($user['email']);
             if ($this->Users->save($user)) {
+                $this->_send_activation_email($user);
                 $this->Flash->success(__('The user has been saved.'));
                 return $this->redirect(['_name' => 'home']);
             } else {
@@ -222,15 +210,82 @@ class UsersController extends AppController
      * 
      * @param type $user
      */
-    public function send_activation_email($user)
+    private function _send_activation_email($user)
     {
         $email = new Email('default');
         $email->to($user['email'])
-                ->subject('Please activate your account')
-                ->template('activate')
-                ->viewVars(array('user' => $user))
-                ->emailFormat('html')
+                ->subject("Please activate your account")
+                ->viewVars(['user' => $user])
+                ->template('active')
+                ->emailFormat("html")
                 ->send();
+    }
+
+    /**
+     * Send reset password email
+     * 
+     * @param type $user
+     */
+    private function _send_reset_password_email($user)
+    {
+        $email = new Email('default');
+        $new_pass = $this->createRandomPassword();
+        $user['password'] = $new_pass;
+        $this->Users->save($user);
+        $email->to($user['email'])
+                ->subject("Please activate your account")
+                ->viewVars(['user' => $user, 'new_pass' => $new_pass])
+                ->template('reset_password')
+                ->emailFormat("html")
+                ->send();
+    }
+
+    /**
+     * Active account method
+     * @param type $user
+     * @param type $token
+     * @return type
+     */
+    public function activeAccount($user, $token)
+    {
+        if ($this->request->is(['get', 'post'])) {
+            $data = $this->request->params['pass'];
+            $user = $this->Users->find()->where(['id' => $data[0], 'token' => $data[1]])->first();
+            if (!empty($user)) {
+                $user->is_actived = 1;
+                if ($this->Users->save($user)) {
+                    $this->Flash->success(__('Your account has been actived.'));
+                    return $this->redirect(['_name' => 'login']);
+                } else {
+                    $this->Flash->error(__("Your account hasn't been actived. Please, try again."));
+                }
+            }
+        }
+    }
+
+    /**
+     * Reset password method
+     * 
+     * @return type
+     */
+    public function resetPassword()
+    {
+        if ($this->request->is('post')) {
+            $data = $this->request->data;
+            $user = $this->Users->find('all', [
+                        'conditions' => ['email' => $data['email']],
+                    ])->first();
+            if (!empty($user)) {
+                $this->_send_reset_password_email($user);
+                $this->Flash->success(__('Please check your email to get new password!'));
+                return $this->redirect(['_name' => 'home']);
+            } else {
+                $this->Flash->error(__("This email isn't exits. Please, try again."));
+                return $this->redirect(['_name' => 'resetPass']);
+            }
+        }
+        $this->set(compact('user'));
+        $this->set('_serialize', ['user']);
     }
 
     /**
@@ -240,7 +295,23 @@ class UsersController extends AppController
      */
     public function beforeFilter(Event $event)
     {
-        $this->Auth->allow(['add', 'logout', 'changePassword']);
+        $this->Auth->allow(['add', 'logout', 'changePassword', 'activeAccount', 'resetPassword']);
+    }
+
+    /**
+     * Create a random password
+     * 
+     * @return string
+     */
+    public function createRandomPassword($length = 7)
+    {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 
 }

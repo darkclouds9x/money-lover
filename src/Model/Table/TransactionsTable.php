@@ -7,6 +7,9 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
+use Cake\ORM\TableRegistry;
+use Cake\Database\Exception;
 
 /**
  * Transactions Model
@@ -200,11 +203,36 @@ class TransactionsTable extends Table
      */
     public function deleteAllTransactionsOfCategory($category_id)
     {
-        $transactions = $this->find()->where(['category_id' => $category_id])->all();
-        foreach ($transactions as $transaction) {
-            $transaction->status = 0;
-            $this->save($transaction);
+        $conn = ConnectionManager::get('default');
+        $conn->begin();
+        try {
+            $this->saveTransactions($category_id);
+            $conn->commit();
+        } catch (Exception $e) {
+            $conn->rollback();
+            return false;
         }
+        return true;
+    }
+
+    /**
+     * Save many transactions
+     * 
+     * @param type $category_id
+     * @return boolean
+     */
+    public function saveTransactions($category_id)
+    {
+        $transactionsTable = TableRegistry::get('Transactions');
+        $transactions = $transactionsTable->find()->where(['category_id' => $category_id])->all();
+        $transactionsTable->connection()->transactional(function() use ($transactionsTable, $transactions) {
+            foreach ($transactions as $transaction) {
+                $transaction->status = 0;
+                if ($transactionsTable->save($transaction, ['atomic' => false]) == false) {
+                    throw new Exception(__("Can't delete transaction of this category"));
+                }
+            }
+        });
         return true;
     }
 
@@ -262,4 +290,22 @@ class TransactionsTable extends Table
         $total_report = $this->computingIncomeAndExpense($transactions);
         return $total_report;
     }
+
+    public function saveAfterDelete($transaction)
+    {
+        $current_wallet = $this->Wallets->get($transaction->wallet_id);
+        $current_categories = $this->Categories->get($transaction->category_id);
+        if ($current_categories->type_id == 1) {
+            $current_wallet->current_balance = $current_wallet->current_balance - $transaction->balance;
+        } else {
+            $current_wallet->current_balance = $current_wallet->current_balance + $transaction->balance;
+        }
+        $transaction->status = 0;
+        if ($this->save($transaction) && $this->Wallets->save($current_wallet)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

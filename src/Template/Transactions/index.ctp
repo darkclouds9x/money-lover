@@ -41,7 +41,7 @@
             </div>
         </div>
         <?= $this->Form->end() ?>
-    </div>
+    </div> <!-- end .change-wallet-->
 
     <div class="row monthly-report">
         <div class="row date-range">

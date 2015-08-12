@@ -9,6 +9,18 @@
     </ul>
 </div>
 <div class="categories index large-10 medium-9 columns">
+    <div class=" row change-wallet">
+        <?=
+        $this->Form->create(null, [
+            'url' => ['_name' => 'changeWallet']
+        ])
+        ?>
+        <div class="col-sm-4">
+            <?php echo $this->Form->input('wallet_id', ['options' => $wallets, 'default' => $last_wallet]); ?>
+            <?= $this->Form->button(__('Change wallet')) ?>
+        </div>
+        <?= $this->Form->end() ?>
+    </div> <!-- end .change-wallet-->
     <table cellpadding="0" cellspacing="0">
         <thead>
             <tr>
@@ -40,7 +52,7 @@
                         <?php endif ?>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+            <?php endforeach; ?>
         </tbody>
     </table>
     <div class="paginator">

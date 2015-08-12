@@ -56,12 +56,7 @@ class TransactionsController extends AppController
             'contain' => ['Categories.Types']
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
-        $wallets = $this->Transactions->Wallets->find('list', [
-            'conditions' => [
-                'Wallets.user_id' => $user->id
-            ],
-            'limit' => 200
-        ]);
+        $wallets = $this->Wallets->getAllWalletsOfUser($user);
         $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $list_month, $list_year);
         $last_wallet = $user->last_wallet;
         $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports'));
@@ -93,6 +88,8 @@ class TransactionsController extends AppController
     public function add()
     {
         $user = $this->getCurrentUserInfo();
+        $income_categories = $this->Categories->getListIncomeCategories($user);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
         $transaction = $this->Transactions->newEntity();
         if ($this->request->is('post')) {
             $data = $this->request->data;
@@ -115,12 +112,7 @@ class TransactionsController extends AppController
 //                $this->rollback();
             }
         }
-        $categories = $this->Transactions->Categories->find('list', [
-            'conditions' => [
-                'Categories.wallet_id' => $user->last_wallet,
-            ],
-            'limit' => 200]);
-        $this->set(compact('transaction', 'categories'));
+        $this->set(compact('transaction', 'income_categories','expense_categories' ));
         $this->set('_serialize', ['transaction']);
     }
 
@@ -161,8 +153,8 @@ class TransactionsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
         $transaction = $this->Transactions->get($id);
-        $transaction->status = 0;
-        if ($this->Transactions->save($transaction)) {
+
+        if ($this->Transactions->saveAfterDelete($transaction)) {
             $this->Flash->success(__('The transaction has been deleted.'));
         } else {
             $this->Flash->error(__('The transaction could not be deleted. Please, try again.'));
@@ -199,7 +191,7 @@ class TransactionsController extends AppController
                 'balance' => $data['balance'],
                 'note' => __('Received from ') . $transfer_wallet->title,
             ]);
-            if ($transfer_wallet->checkCreatedWallet($data['month'], $data['year'])) {
+            if ($transfer_wallet->checkCreatedWallet($data['done_date']['month'], $data['done_date']['year'])) {
                 $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->balance;
                 $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->balance;
             }
@@ -216,7 +208,6 @@ class TransactionsController extends AppController
                 'Wallets.user_id' => $user->id,
             ],
             'limit' => 200]);
-//        pr($categories);die;
         $this->set(compact('wallets', 'expense_categories', 'user', 'transaction'));
         $this->set('_serialize', ['transaction']);
         $this->set('title', __('Transfer Money Between Wallets'));

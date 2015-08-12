@@ -8,10 +8,16 @@
 </div>
 <div class="transactions form large-10 medium-9 columns">
     <?= $this->Form->create($transaction) ?>
+    <?php
+        $options = [
+            __('Income Category') => $income_categories,
+            __('Expense Category') => $expense_categories,
+        ];
+        ?>
     <fieldset>
         <legend><?= __('Add Transaction') ?></legend>
         <?php
-            echo $this->Form->input('category_id', ['options' => $categories]);
+            echo $this->Form->select('category_id', $options);
             echo $this->Form->input('title');
             echo $this->Form->input('balance');
             echo $this->Form->input('note');

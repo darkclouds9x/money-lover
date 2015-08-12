@@ -41,13 +41,12 @@ class CategoriesController extends AppController
             ],
             'contain' => ['Types', 'Wallets'],
         ];
-        $wallets = $this->Categories->Wallets->find('list', [
-            'conditions' => [
-                'Wallets.id' => $user->last_wallet,
-            ],
-        ]);
+        $wallet = $this->Wallets->getCurrentWallet($user);
+        $wallets = $this->Wallets->getAllWalletsOfUser($user);
+//        var_dump($wallets);die;
+        $last_wallet = $user->last_wallet;
         $this->set('categories', $this->paginate($this->Categories));
-        $this->set(compact('wallets'));
+        $this->set(compact('$wallet','wallets','last_wallet'));
         $this->set('_serialize', ['categories']);
     }
 
@@ -64,7 +63,7 @@ class CategoriesController extends AppController
 
         if ($this->request->is('post')) {
 
-            $id = $this->request->data;
+            $id = $this->request->data['Category'];
         }
         $current_category = $this->Categories->get($id, [
             'contain' => ['Wallets', 'Types', 'Transactions']
@@ -79,14 +78,7 @@ class CategoriesController extends AppController
             'contain' => ['Categories']
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
-        $categories = $this->Categories->find('all', [
-            'conditions' => [
-                'Categories.wallet_id' => $user->last_wallet
-            ],
-            'limit' => 200
-        ])->all();
-//        var_dump((array)$categories);die;
-        $this->set(compact('categories', 'current_category', 'income_categories', 'expense_categories'));
+        $this->set(compact('current_category', 'income_categories', 'expense_categories'));
         $this->set('current_category', $current_category);
         $this->set('_serialize', ['category']);
     }
@@ -163,7 +155,9 @@ class CategoriesController extends AppController
         $this->request->allowMethod(['post', 'delete']);
         $category = $this->Categories->get($id);
         $category->status = 0;
-        if ($this->Categories->save($category) && $this->Transactions->deleteAllTransactionsOfCategory($category->id)) {
+//                var_dump($this->Categories->save($category));die;
+//                var_dump($this->Transactions->deleteAllTransactionsOfCategory($category->id));die;
+        if (($this->Transactions->deleteAllTransactionsOfCategory($category->id)) && ($this->Categories->save($category))) {
             $this->Flash->success(__('The category has been deleted.'));
         } else {
             $this->Flash->error(__('The category could not be deleted. Please, try again.'));

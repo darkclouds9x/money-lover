@@ -55,8 +55,8 @@ use Cake\Routing\Router;
                     </div>
                     <div class="navbar-collapse collapse" id="main-menu">
                         <ul class="nav navbar-nav">                        
-                            <li class="active"><a href="<?= Router::url(['_name' => 'home']) ?>">Home</a></li>
-                            <li><a href="">About</a></li>
+                            <li class="active"><a href="<?= Router::url(['controller' => 'categories', 'action' => 'index']) ?>"><?= __('Category') ?></a></li>
+                            <li><a href="<?= Router::url(['controller' => 'wallets', 'action' => 'index']) ?>"><?= __('Wallets')?></a></li>
                             <li><a href="">Contact</a></li>
                         </ul>
                         <ul class="nav navbar-nav navbar-right">

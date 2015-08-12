@@ -73,7 +73,9 @@ Router::scope('/', function ($routes) {
     $routes->connect(
             '/reset-password', ['controller' => 'Users', 'action' => 'resetPassword'], ['_name' => 'resetPass']
     );
-
+    $routes->connect(
+            '/active-account', ['controller' => 'Users', 'action' => 'activeAccount'], ['_name' => 'activeAccount']
+    );
     $routes->connect(
             '/change-current-wallet', ['controller' => 'Wallets', 'action' => 'changeCurrentWallet'], ['_name' => 'changeWallet']
     );
