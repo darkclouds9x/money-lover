@@ -57,15 +57,18 @@ class UsersController extends AppController
     public function add()
     {
         $user = $this->Users->newEntity();
+        if ($this->Auth->user()) {
+            $this->redirect(['controller' => 'transactions', 'action' => 'index']);
+        }
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
             $user['token'] = $user->createToken($user['email']);
             if ($this->Users->save($user)) {
                 $this->_send_activation_email($user);
-                $this->Flash->success(__('The user has been saved.'));
-                return $this->redirect(['_name' => 'home']);
+                $this->Flash->success(__('You have successfully registered! Please check your email to active account!'));
+                return $this->redirect(['_name' => 'login']);
             } else {
-                $this->Flash->error(__('The user could not be saved. Please, try again.'));
+                $this->Flash->error(__('Registration was failure. Please, try again.'));
             }
         }
         $this->set(compact('user'));
@@ -123,9 +126,16 @@ class UsersController extends AppController
      */
     public function login()
     {
+        if ($this->Auth->user()) {
+            $this->redirect(['controller' => 'transactions', 'action' => 'index']);
+        }
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
-            if ($user) {
+            if (!empty($user['email']) && ($user['is_actived'] == 0)) {
+                $this->_send_activation_email($user);
+                $this->Flash->error(__("Your account isn't actived. Please check your email again to active!"));
+                return $this->redirect($this->referer());
+            } elseif ($user) {
                 $this->Auth->setUser($user);
                 if (empty($this->Auth->user('last_wallet'))) {
                     return $this->redirect([
@@ -133,10 +143,11 @@ class UsersController extends AppController
                                 'action' => 'add',
                     ]);
                 } else {
-                    return $this->redirect(['_name' => 'home']);
+                    return $this->redirect(['controller' => 'transactions', 'action' => 'index']);
                 }
             }
             $this->Flash->error(__('Your username or password is incorrect.'));
+            return $this->redirect($this->referer());
         }
     }
 
@@ -255,10 +266,19 @@ class UsersController extends AppController
                 $user->is_actived = 1;
                 if ($this->Users->save($user)) {
                     $this->Flash->success(__('Your account has been actived.'));
-                    return $this->redirect(['_name' => 'login']);
-                } else {
-                    $this->Flash->error(__("Your account hasn't been actived. Please, try again."));
+
+                    $this->Auth->setUser($user->toArray());
+                    if (empty($this->Auth->user('last_wallet'))) {
+                        return $this->redirect([
+                                    'controller' => 'Wallets',
+                                    'action' => 'add',
+                        ]);
+                    } else {
+                        return $this->redirect(['_name' => 'index']);
+                    }
                 }
+            } else {
+                $this->Flash->error(__("Your account hasn't been actived. Please, try again."));
             }
         }
     }

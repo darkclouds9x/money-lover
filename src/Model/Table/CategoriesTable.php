@@ -102,13 +102,13 @@ class CategoriesTable extends Table
     public function addDefaultCategories($wallet)
     {
         $difference_income = new Category([
-            'title' => __('Diffference'),
+            'title' => __('Difference'),
             'wallet_id' => $wallet->id,
             'type_id' => 1,
             'is_locked' => 1,
         ]);
         $difference_expense = new Category([
-            'title' => __('Diffference'),
+            'title' => __('Difference'),
             'wallet_id' => $wallet->id,
             'type_id' => 2,
             'is_locked' => 1,
@@ -240,5 +240,16 @@ class CategoriesTable extends Table
         });
         return true;
     }
-
+    
+    /**
+     * Get id of difference category
+     * 
+     * @param type $wallet_id
+     * @return type
+     */
+    public function getDifferentCategoryId($wallet_id, $type_id)
+    {
+        $diffrentCategory = $this->find()->where(['wallet_id' => $wallet_id, 'title' => 'Difference', 'type_id' => $type_id])->first();
+        return $diffrentCategory->id;
+    }
 }

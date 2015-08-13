@@ -1,0 +1,8 @@
+msgid ""
+msgstr ""
+ 
+msgid "Login"
+msgstr "Đăng nhập"
+
+msgid "Sign Up"
+msgstr "Đăng ký"

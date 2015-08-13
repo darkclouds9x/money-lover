@@ -1,8 +1,9 @@
 body{
     color: #888888;
-    font-family: 'Bree Serif',serif;
+    /*    font-family: 'Bree Serif',serif;*/
     font-size: 16px;
     min-height: 2000px;
+    padding-top: 55px;
 }
 
 .login_modal_footer{margin-top:5px;}
@@ -39,4 +40,9 @@ body{
 #modal-launcher{margin: 30% 0 0 30%; }
 h1{border-bottom:5px solid #00BB64;}
 
-
+#main-menu{
+    margin-left: 212px;
+}
+.navbar-right{
+    padding-right: 10px;
+}

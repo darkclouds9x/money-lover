@@ -66,8 +66,8 @@ class WalletsController extends AppController
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
             $wallet->user_id = $user->id;
             $wallet->current_balance = $wallet->init_balance;
+            $user->total_balance = $user->total_balance + $wallet->init_balance;
             if ($this->Wallets->save($wallet)) {
-
                 //Add wallet after first
                 if (empty($user->last_wallet)) {
                     $wallet->is_current = 1;
@@ -81,7 +81,6 @@ class WalletsController extends AppController
                         $this->Flash->error(__('The wallet could not be saved. Please, try again.'));
                     }
                 }
-
                 //Add default categories
                 $default_categories = $this->Categories->addDefaultCategories($wallet);
                 $this->Categories->saveDefaultCategory($default_categories);
@@ -151,7 +150,7 @@ class WalletsController extends AppController
     public function changeCurrentWallet()
     {
         $user = $this->getCurrentUserInfo();
-        $last_wallet = $this->Wallets->find()->where(['id' => $user->last_wallet])->first();
+        $last_wallet = $this->Wallets->get($user->last_wallet);
         if ($this->request->is(['post'])) {
             $current_wallet = $this->Wallets->find()->where(['id' => $this->request->data['wallet_id']])->first();
             $last_wallet->is_current = 0;
@@ -160,10 +159,10 @@ class WalletsController extends AppController
             if ($this->Users->save($user) && ($this->Wallets->save($current_wallet) && $this->Wallets->save($last_wallet))) {
                 $current_wallet->is_current = 1;
                 $this->Flash->success(__('The current wallet is changed successfull.'));
-                return $this->redirect(['_name' => 'home']);
+                return $this->redirect($this->referer());
             } else {
                 $this->Flash->error(__("The current wallet isn't changed."));
-                return $this->redirect(['_name' => 'home']);
+                return $this->redirect($this->referer());
             }
         }
     }

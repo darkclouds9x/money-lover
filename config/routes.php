@@ -47,12 +47,11 @@ Router::scope('/', function ($routes) {
      * its action called 'display', and we pass a param to select the view file
      * to use (in this case, src/Template/Pages/home.ctp)...
      */
-//    $routes->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
+    $routes->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home'],['_name' => 'home']);
 
     $routes->connect(
-            '/', ['controller' => 'Transactions', 'action' => 'index'], ['_name' => 'home']
+            '/', ['controller' => 'Transactions', 'action' => 'index'], ['_name' => 'monthlyReport']
     );
-//     $routes->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
     /**
      * ...and connect the rest of 'Pages' controller's URLs.
      */
@@ -81,6 +80,15 @@ Router::scope('/', function ($routes) {
     );
     $routes->connect(
             '/transfer-money', ['controller' => 'Transactions', 'action' => 'transferMoney'], ['_name' => 'transferMoney']
+    );
+    $routes->connect(
+            '/:language/:controller/:action/*', [], ['language' => 'en|vi']
+    );
+    $routes->connect(
+            '/:language/:controller/', ['action' => 'index'], ['language' => 'en|vi']
+    );
+    $routes->connect(
+            '/:language', ['controller' => 'Transactions', 'action' => 'index'], ['language' => 'en|vi']
     );
     /**
      * Connect catchall routes for all controllers.

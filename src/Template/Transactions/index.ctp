@@ -106,7 +106,7 @@
                             <th><?= $this->Paginator->sort('title') ?></th>
                             <th><?= $this->Paginator->sort('category_id') ?></th>
                             <th><?= $this->Paginator->sort('type_id') ?></th>
-                            <th><?= $this->Paginator->sort('balance') ?></th>
+                            <th><?= $this->Paginator->sort('amount') ?></th>
                             <th><?= $this->Paginator->sort('created') ?></th>
                             <th class="actions"><?= __('Actions') ?></th>
                         </tr>
@@ -120,7 +120,7 @@
                                     <?= $transaction->has('category') ? $this->Html->link($transaction->category->title, ['controller' => 'Categories', 'action' => 'view', $transaction->category->id]) : '' ?>
                                 </td>
                                 <td><?= h($transaction->category->type->title) ?></td>
-                                <td><?= $this->Number->format($transaction->balance) ?></td>
+                                <td><?= $this->Number->format($transaction->amount) ?></td>
                                 <td><?= h($transaction->created) ?></td>
                                 <td class="actions">
                                     <?= $this->Html->link(__('View'), ['action' => 'view', $transaction->id]) ?>

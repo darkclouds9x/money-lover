@@ -37,13 +37,13 @@ class TransactionsController extends AppController
         $user = $this->getCurrentUserInfo();
         $current_month = Time::now()->month;
         $current_year = Time::now()->year;
-        $current_wallet = $this->Wallets->getCurrentWallet($user);
+        $current_wallet = $this->Wallets->get($user->last_wallet);
 
         if (empty($list_month) || empty($list_year)) {
             $list_month = $current_month;
             $list_year = $current_year;
         }
-        if ($current_wallet->checkCreatedWallet($list_month,$list_year) == false) {
+        if ($current_wallet->checkCreatedWallet($list_month, $list_year) == false) {
             $current_wallet->init_balance = $current_wallet->current_balance = 0;
         }
         $this->paginate = [
@@ -94,25 +94,25 @@ class TransactionsController extends AppController
         if ($this->request->is('post')) {
             $data = $this->request->data;
             $category = $this->Categories->find()->where(['id' => $data['category_id']])->first();
-            $wallet = $this->Wallets->getCurrentWallet($user);
+            $wallet = $this->Wallets->get($user->last_wallet);
             $transaction = $this->Transactions->patchEntity($transaction, $this->request->data);
             $transaction->wallet_id = $user->last_wallet;
             $transaction->user_id = $this->Auth->user('id');
             if ($category->type_id == 1) {
-                $wallet->current_balance = $wallet->current_balance + $transaction->balance;
+                $wallet->current_balance = $wallet->current_balance + $transaction->amount;
             } elseif ($category->type_id == 2) {
-                $wallet->current_balance = $wallet->current_balance - $transaction->balance;
+                $wallet->current_balance = $wallet->current_balance - $transaction->amount;
             }
             if ($this->Transactions->save($transaction) && $this->Wallets->save($wallet)) {
                 $this->Flash->success(__('The transaction has been saved.'));
 //                $this->commit();
-                return $this->redirect(['action' => 'index']);
+//                return $this->redirect(['action' => 'index']);
             } else {
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
 //                $this->rollback();
             }
         }
-        $this->set(compact('transaction', 'income_categories','expense_categories' ));
+        $this->set(compact('transaction', 'income_categories', 'expense_categories'));
         $this->set('_serialize', ['transaction']);
     }
 
@@ -159,7 +159,9 @@ class TransactionsController extends AppController
         } else {
             $this->Flash->error(__('The transaction could not be deleted. Please, try again.'));
         }
-        return $this->redirect(['action' => 'index']);
+//        return $this->redirect(['action' => 'index']);
+//        $this->index();
+        $this->redirect(['controller' => 'transactions', 'action' => 'index']);
     }
 
     /**
@@ -173,14 +175,14 @@ class TransactionsController extends AppController
         $transaction = $this->Transactions->newEntity();
         if ($this->request->is('post')) {
             $data = $this->request->data;
-            $receiver_wallet = $this->Wallets->getReceiverWallet($data['to_wallet']);
-            $transfer_wallet = $this->Wallets->getTransferWallet($data['from_wallet']);
+            $receiver_wallet = $this->Wallets->get($data['to_wallet']);
+            $transfer_wallet = $this->Wallets->get($data['from_wallet']);
 
             $transfer_transaction = $this->Transactions->newEntity([
                 'wallet_id' => $transfer_wallet->id,
                 'category_id' => $data['category_id'],
                 'title' => __('Transfer Money'),
-                'balance' => $data['balance'],
+                'amount' => $data['amount'],
                 'note' => __('Transfer money to ') . $receiver_wallet->title,
             ]);
 
@@ -188,12 +190,12 @@ class TransactionsController extends AppController
                 'wallet_id' => $receiver_wallet->id,
                 'category_id' => $this->Categories->getReceiverCategoryId($receiver_wallet->id),
                 'title' => __('Transfer Money'),
-                'balance' => $data['balance'],
+                'amount' => $data['amount'],
                 'note' => __('Received from ') . $transfer_wallet->title,
             ]);
             if ($transfer_wallet->checkCreatedWallet($data['done_date']['month'], $data['done_date']['year'])) {
-                $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->balance;
-                $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->balance;
+                $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->amount;
+                $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->amount;
             }
             if ($this->Transactions->saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
@@ -224,7 +226,7 @@ class TransactionsController extends AppController
         $action = $this->request->params['action'];
 
         // The add and index actions are always allowed.
-        if (in_array($action, [ 'index', 'view', 'add', 'edit', 'delete', 'transferMoney'])) {
+        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete', 'transferMoney'])) {
             return true;
         }
         // All other actions require an id.

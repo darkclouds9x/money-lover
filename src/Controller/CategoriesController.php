@@ -41,7 +41,7 @@ class CategoriesController extends AppController
             ],
             'contain' => ['Types', 'Wallets'],
         ];
-        $wallet = $this->Wallets->getCurrentWallet($user);
+        $wallet = $this->Wallets->get($user->last_wallet);
         $wallets = $this->Wallets->getAllWalletsOfUser($user);
 //        var_dump($wallets);die;
         $last_wallet = $user->last_wallet;
@@ -152,12 +152,11 @@ class CategoriesController extends AppController
      */
     public function delete($id = null)
     {
+        $user = $this->getCurrentUserInfo();
         $this->request->allowMethod(['post', 'delete']);
         $category = $this->Categories->get($id);
         $category->status = 0;
-//                var_dump($this->Categories->save($category));die;
-//                var_dump($this->Transactions->deleteAllTransactionsOfCategory($category->id));die;
-        if (($this->Transactions->deleteAllTransactionsOfCategory($category->id)) && ($this->Categories->save($category))) {
+        if (($this->Transactions->deleteAllTransactionsOfCategory($category->id, $category->type_id, $user->last_wallet)) && ($this->Categories->save($category))) {
             $this->Flash->success(__('The category has been deleted.'));
         } else {
             $this->Flash->error(__('The category could not be deleted. Please, try again.'));

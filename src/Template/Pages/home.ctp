@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
@@ -12,11 +13,9 @@
  * @since         0.10.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
-use Cake\Cache\Cache;
 use Cake\Core\Configure;
-use Cake\Datasource\ConnectionManager;
-use Cake\Error\Debugger;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Routing\Router;
 
 $this->layout = false;
 
@@ -27,165 +26,184 @@ endif;
 $cakeDescription = 'CakePHP: the rapid development php framework';
 ?>
 <!DOCTYPE html>
-<html>
-<head>
-    <?= $this->Html->charset() ?>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <?= $cakeDescription ?>
-    </title>
-    <?= $this->Html->meta('icon') ?>
-    <?= $this->Html->css('base.css') ?>
-    <?= $this->Html->css('cake.css') ?>
-</head>
-<body class="home">
-    <header>
-        <div class="header-image">
-            <?= $this->Html->image('http://cakephp.org/img/cake-logo.png') ?>
-            <h1>Get the Ovens Ready</h1>
-        </div>
-    </header>
-    <div id="content">
-        <?php
-        if (Configure::read('debug')):
-            Debugger::checkSecurityKeys();
-        endif;
-        ?>
-        <p id="url-rewriting-warning" style="background-color:#e32; color:#fff;display:none">
-            URL rewriting is not properly configured on your server.
-            1) <a target="_blank" href="http://book.cakephp.org/3.0/en/installation/url-rewriting.html" style="color:#fff;">Help me configure it</a>
-            2) <a target="_blank" href="http://book.cakephp.org/3.0/en/development/configuration.html#general-configuration" style="color:#fff;">I don't / can't use URL rewriting</a>
-        </p>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author"      content="Sergey Pozhilov (GetTemplate.com)">
 
-        <div class="row">
-            <div class="columns large-5 platform checks">
-                <?php if (version_compare(PHP_VERSION, '5.4.16', '>=')): ?>
-                    <p class="success">Your version of PHP is 5.4.16 or higher.</p>
-                <?php else: ?>
-                    <p class="problem">Your version of PHP is too low. You need PHP 5.4.16 or higher to use CakePHP.</p>
-                <?php endif; ?>
+        <title><?= __('Money lover: Homepage') ?></title>
 
-                <?php if (extension_loaded('mbstring')): ?>
-                    <p class="success">Your version of PHP has the mbstring extension loaded.</p>
-                <?php else: ?>
-                    <p class="problem">Your version of PHP does NOT have the mbstring extension loaded.</p>;
-                <?php endif; ?>
+        <link rel="shortcut icon" href="/img/gt_favicon.png">
 
-                <?php if (extension_loaded('openssl')): ?>
-                    <p class="success">Your version of PHP has the openssl extension loaded.</p>
-                <?php elseif (extension_loaded('mcrypt')): ?>
-                    <p class="success">Your version of PHP has the mcrypt extension loaded.</p>
-                <?php else: ?>
-                    <p class="problem">Your version of PHP does NOT have the openssl or mcrypt extension loaded.</p>
-                <?php endif; ?>
+        <!-- Bootstrap itself -->
+        <?= $this->Html->css('bootstrap.min.css') ?>
 
-                <?php if (extension_loaded('intl')): ?>
-                    <p class="success">Your version of PHP has the intl extension loaded.</p>
-                <?php else: ?>
-                    <p class="problem">Your version of PHP does NOT have the intl extension loaded.</p>
-                <?php endif; ?>
+        <!-- Custom styles -->
+        <link rel="stylesheet" href="/css/magister.css">
+
+        <!-- Fonts -->
+        <?= $this->Html->css('font-awesome.min.css') ?>
+        <link href='http://fonts.googleapis.com/css?family=Wire+One' rel='stylesheet' type='text/css'>
+    </head>
+
+    <!-- use "theme-invert" class on bright backgrounds, also try "text-shadows" class -->
+    <body class="theme-invert">
+
+        <nav class="mainmenu">
+            <div class="container">
+                <div class="dropdown">
+                    <button type="button" class="navbar-toggle" data-toggle="dropdown"><span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+                    <!-- <a data-toggle="dropdown" href="#">Dropdown trigger</a> -->
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <li><a href="<?= Router::url(['_name' => 'home']) ?>" class="active">Hello</a></li>
+                        <?php if ($authUser) { ?>
+                            <li><a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>"><?= __('Transacton') ?></a></li>
+                            <li><a href="<?= Router::url(['controller' => 'categories', 'action' => 'index']) ?>"><?= __('Category') ?></a></li>
+                            <li><a href="<?= Router::url(['controller' => 'wallets', 'action' => 'index']) ?>"><?= __('Wallets') ?></a></li>
+                        <?php } ?>
+                        <li><a href="#about">About me</a></li>
+                        <li><a href="#themes">Themes</a></li>
+                        <li><a href="#contact">Get in touch</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="columns large-6 filesystem checks">
-                <?php if (is_writable(TMP)): ?>
-                    <p class="success">Your tmp directory is writable.</p>
-                <?php else: ?>
-                    <p class="problem">Your tmp directory is NOT writable.</p>
-                <?php endif; ?>
+        </nav>
 
-                <?php if (is_writable(LOGS)): ?>
-                    <p class="success">Your logs directory is writable.</p>
-                <?php else: ?>
-                    <p class="problem">Your logs directory is NOT writable.</p>
-                <?php endif; ?>
+        <!-- Main (Home) section -->
+        <section class="section" id="head">
+            <div class="container">
 
-                <?php $settings = Cache::config('_cake_core_'); ?>
-                <?php if (!empty($settings)): ?>
-                    <p class="success">The <em><?= $settings['className'] ?>Engine</em> is being used for core caching. To change the config edit config/app.php</p>
-                <?php else: ?>
-                    <p class="problem">Your cache is NOT working. Please check the settings in config/app.php</p>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="columns large-12  database checks">
-                <?php
-                    try {
-                        $connection = ConnectionManager::get('default');
-                        $connected = $connection->connect();
-                    } catch (Exception $connectionError) {
-                        $connected = false;
-                        $errorMsg = $connectionError->getMessage();
-                        if (method_exists($connectionError, 'getAttributes')):
-                            $attributes = $connectionError->getAttributes();
-                            if (isset($errorMsg['message'])):
-                                $errorMsg .= '<br />' . $attributes['message'];
-                            endif;
-                        endif;
-                    }
-                ?>
-                <?php if ($connected): ?>
-                    <p class="success">CakePHP is able to connect to the database.</p>
-                <?php else: ?>
-                    <p class="problem">CakePHP is NOT able to connect to the database.<br /><br /><?= $errorMsg ?></p>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="columns large-6">
-                <h3>Editing this Page</h3>
-                <ul>
-                    <li>To change the content of this page, edit: src/Template/Pages/home.ctp.</li>
-                    <li>You can also add some CSS styles for your pages at: webroot/css/.</li>
-                </ul>
-            </div>
-            <div class="columns large-6">
-                <h3>Getting Started</h3>
-                <ul>
-                    <li><a target="_blank" href="http://book.cakephp.org/3.0/en/">CakePHP 3.0 Docs</a></li>
-                    <li><a target="_blank" href="http://book.cakephp.org/3.0/en/tutorials-and-examples/bookmarks/intro.html">The 15 min Bookmarker Tutorial</a></li>
-                    <li><a target="_blank" href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/blog.html">The 15 min Blog Tutorial</a></li>
-                </ul>
-                <p>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col-md-10 col-lg-10 col-md-offset-1 col-lg-offset-1 text-center">	
 
-        <hr/>
-        <div class="row">
-            <div class="columns large-12">
-                <h3 class="">More about Cake</h3>
-                <p>
-                    CakePHP is a rapid development framework for PHP which uses commonly known design patterns like Front Controller and MVC.
+                        <!-- Site Title, your name, HELLO msg, etc. -->
+                        <h1 class="title">Magister</h1>
+                        <h2 class="subtitle">Free html5 template by GetTemplate</h2>
+
+                        <!-- Short introductory (optional) -->
+                        <h3 class="tagline">
+                            Potentially, the best place to tell people why they are here.<br>
+                            So, this is a demo page built to showcase the beauty of the template.
+                        </h3>
+
+                        <!-- Nice place to describe your site in a sentence or two -->
+                        <div class="row">
+                            <a href="<?= Router::url(['_name' => 'login']) ?>" class="btn btn-default btn-lg"><?= __('Login') ?></a>
+                            <a href="<?= Router::url(['_name' => 'signup']) ?>" class="btn btn-success btn-lg"><?= __('Sign Up') ?></a>
+                        </div>
+
+                    </div> <!-- /col -->
+                </div> <!-- /row -->
+
+            </div>
+        </section>
+
+        <!-- Second (About) section -->
+        <section class="section" id="about">
+            <div class="container">
+
+                <h2 class="text-center title">About me</h2>
+                <div class="row">
+                    <div class="col-sm-4 col-sm-offset-2">    
+                        <h5><strong>Where's my lorem ipsum?<br></strong></h5>
+                        <p>Well, here it is: Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolorum, ullam, ducimus, eaque, ex autem est dolore illo similique quasi unde sint rerum magnam quod amet iste dolorem ad laudantium molestias enim quibusdam inventore totam fugit eum iusto ratione alias deleniti suscipit modi quis nostrum veniam fugiat debitis officiis impedit ipsum natus ipsa. Doloremque, id, at, corporis, libero laborum architecto mollitia molestiae maxime aut deserunt sed perspiciatis quibusdam praesentium consectetur in sint impedit voluptates! Deleniti, sequi voluptate recusandae facere nostrum?</p>    
+                    </div>
+                    <div class="col-sm-4">
+                        <h5><strong>More, more lipsum!<br></strong></h5>    
+                        <p>Tempore, eos, voluptatem minus commodi error aut eaque neque consequuntur optio nesciunt quod quibusdam. Ipsum, voluptatibus, totam, modi perspiciatis repudiandae odio ad possimus molestias culpa optio eaque itaque dicta quod cupiditate reiciendis illo illum aspernatur ducimus praesentium quae porro alias repellat quasi cum fugiat accusamus molestiae exercitationem amet fugit sint eligendi omnis adipisci corrupti. Aspernatur.</p>    
+                        <h5><strong>Author links<br></strong></h5>    
+                        <p><a href="http://be.net/pozhilov9409">Behance</a> / <a href="https://twitter.com/serggg">Twitter</a> / <a href="http://linkedin.com/pozhilov">LinkedIn</a> / <a href="https://www.facebook.com/pozhilov">Facebook</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Third (Works) section -->
+        <section class="section" id="themes">
+            <div class="container">
+
+                <h2 class="text-center title">More Themes</h2>
+                <p class="lead text-center">
+                    Huge thank you to all people who publish<br>
+                    their photos at <a href="http://unsplash.com">Unsplash</a>, thank you guys!
                 </p>
-                <p>
-                    Our primary goal is to provide a structured framework that enables PHP users at all levels to rapidly develop robust web applications, without any loss to flexibility.
-                </p>
+                <div class="row">
+                    <div class="col-sm-4 col-sm-offset-2">
+                        <div class="thumbnail">
+                            <img src="/screenshots/sshot1.jpg" alt="">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque doloribus enim vitae nam cupiditate eius at explicabo eaque facere iste.</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="thumbnail">
+                            <img src="/screenshots/sshot4.jpg" alt="">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque doloribus enim vitae nam cupiditate eius at explicabo eaque facere iste.</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-sm-offset-2">
+                        <div class="thumbnail">
+                            <img src="/screenshots/sshot5.jpg" alt="">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque doloribus enim vitae nam cupiditate eius at explicabo eaque facere iste.</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="thumbnail">
+                            <img src="/screenshots/sshot3.jpg" alt="">
+                            <div class="caption">
+                                <h3>Thumbnail label</h3>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque doloribus enim vitae nam cupiditate eius at explicabo eaque facere iste.</p>
+                                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default" role="button">Button</a></p>
+                            </div>
+                        </div>
+                    </div>
 
-                <ul>
-                    <li><a href="http://cakefoundation.org/">Cake Software Foundation</a>
-                    <ul><li>Promoting development related to CakePHP</li></ul></li>
-                    <li><a href="http://www.cakephp.org">CakePHP</a>
-                    <ul><li>The Rapid Development Framework</li></ul></li>
-                    <li><a href="http://book.cakephp.org/3.0/en/">CakePHP Documentation</a>
-                    <ul><li>Your Rapid Development Cookbook</li></ul></li>
-                    <li><a href="http://api.cakephp.org/3.0/">CakePHP API</a>
-                    <ul><li>Quick Reference</li></ul></li>
-                    <li><a href="http://bakery.cakephp.org">The Bakery</a>
-                    <ul><li>Everything CakePHP</li></ul></li>
-                    <li><a href="http://plugins.cakephp.org">CakePHP plugins repo</a>
-                    <ul><li>A comprehensive list of all CakePHP plugins created by the community</li></ul></li>
-                    <li><a href="https://groups.google.com/group/cake-php">CakePHP Google Group</a>
-                    <ul><li>Community mailing list</li></ul></li>
-                    <li><a href="irc://irc.freenode.net/cakephp">irc.freenode.net #cakephp</a>
-                    <ul><li>Live chat about CakePHP</li></ul></li>
-                    <li><a href="https://github.com/cakephp/">CakePHP Code</a>
-                    <ul><li>For the Development of CakePHP Git repository, Downloads</li></ul></li>
-                    <li><a href="https://github.com/cakephp/cakephp/issues">CakePHP Issues</a>
-                    <ul><li>CakePHP issues and pull requests</li></ul></li>
-                </ul>
+                </div>
+
             </div>
-        </div>
-    </div>
-    <footer>
-    </footer>
-</body>
+        </section>
+
+        <!-- Fourth (Contact) section -->
+        <section class="section" id="contact">
+            <div class="container">
+
+                <h2 class="text-center title">Get in touch</h2>
+
+                <div class="row">
+                    <div class="col-sm-8 col-sm-offset-2 text-center">
+                        <p class="lead">Have a question about this template, or want to suggest a new feature?</p>
+                        <p>Feel free to email me, or drop me a line in Twitter!</p>
+                        <p><b>gt@gettemplate.com</b><br><br></p>
+                        <ul class="list-inline list-social">
+                            <li><a href="https://twitter.com/serggg" class="btn btn-link"><i class="fa fa-twitter fa-fw"></i> Twitter</a></li>
+                            <li><a href="https://github.com/pozhilov" class="btn btn-link"><i class="fa fa-github fa-fw"></i> Github</a></li>
+                            <li><a href="http://linkedin/in/pozhilov" class="btn btn-link"><i class="fa fa-linkedin fa-fw"></i> LinkedIn</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Load js libs only when the page is loaded. -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+        <script src="/js/modernizr.custom.72241.js"></script>
+        <!-- Custom template scripts -->
+        <script src="/js/magister.js"></script>
+    </body>
 </html>

@@ -19,6 +19,7 @@ namespace App\Controller;
 use Cake\Controller\Controller;
 use Cake\Event\Event;
 use Cake\Controller\Component\AuthComponent;
+use Cake\I18n\I18n;
 
 /**
  * Application Controller
@@ -78,6 +79,24 @@ class AppController extends Controller
         $id = $this->Auth->user('id');
         $userInfo = $this->Users->find()->where(['id' => $id])->first();
         return $userInfo;
+    }
+
+    /**
+     * Change locale method
+     * @return type
+     */
+    public function changeLocale()
+    {
+        if ($this->request->is('get')) {
+            $data = $this->request->data;
+            if ($data['lang'] == 'en') {
+                I18n::locale('en_US');
+                return $this->redirect($this->referer());
+            } elseif ($data['locale'] == 'vi') {
+                I18n::locale('vi_VI');
+                return $this->redirect($this->referer());
+            }
+        }
     }
 
     public function beforeFilter(Event $event)

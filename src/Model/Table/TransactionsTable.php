@@ -60,8 +60,8 @@ class TransactionsTable extends Table
 
         $validator
                 ->add('balance', 'valid', ['rule' => 'numeric'])
-                ->requirePresence('balance', 'create')
-                ->notEmpty('balance');
+                ->requirePresence('amount', 'create')
+                ->notEmpty('amount');
 
         $validator
                 ->allowEmpty('note');
@@ -201,12 +201,12 @@ class TransactionsTable extends Table
      * @param type $category_id
      * @return boolean
      */
-    public function deleteAllTransactionsOfCategory($category_id)
+    public function deleteAllTransactionsOfCategory($category_id, $type_id, $wallet_id)
     {
         $conn = ConnectionManager::get('default');
         $conn->begin();
         try {
-            $this->saveTransactions($category_id);
+            $this->moveTransactionsToDifferentCategory($category_id, $type_id, $wallet_id);
             $conn->commit();
         } catch (Exception $e) {
             $conn->rollback();
@@ -219,15 +219,17 @@ class TransactionsTable extends Table
      * Save many transactions
      * 
      * @param type $category_id
+     * @param type $wallet_id
      * @return boolean
      */
-    public function saveTransactions($category_id)
+    public function moveTransactionsToDifferentCategory($category_id, $type_id, $wallet_id)
     {
         $transactionsTable = TableRegistry::get('Transactions');
         $transactions = $transactionsTable->find()->where(['category_id' => $category_id])->all();
-        $transactionsTable->connection()->transactional(function() use ($transactionsTable, $transactions) {
+        $difference_category_id = $this->Categories->getDifferentCategoryId($wallet_id, $type_id);
+        $transactionsTable->connection()->transactional(function() use ($transactionsTable, $transactions, $difference_category_id) {
             foreach ($transactions as $transaction) {
-                $transaction->status = 0;
+                $transaction->category_id = $difference_category_id;
                 if ($transactionsTable->save($transaction, ['atomic' => false]) == false) {
                     throw new Exception(__("Can't delete transaction of this category"));
                 }
@@ -248,9 +250,9 @@ class TransactionsTable extends Table
         $expense = (float) 0;
         foreach ($transactions as $transaction) {
             if ($transaction->category->type_id == 1) {
-                $income = $income + $transaction->balance;
+                $income = $income + $transaction->amount;
             } elseif ($transaction->category->type_id == 2) {
-                $expense = $expense + $transaction->balance;
+                $expense = $expense + $transaction->amount;
             }
         }
         $balance = $income - $expense;
