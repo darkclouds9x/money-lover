@@ -10,13 +10,23 @@
 </div>
 <div class="categories form large-10 medium-9 columns">
     <?= $this->Form->create($category) ?>
+    <?php
+    $options = [
+        0 => __("Don't belong to any parent category"),
+        __('Income Category') => $income_categories,
+        __('Expense Category') => $expense_categories,
+    ];
+    ?>
     <fieldset>
         <legend><?= __('Add Category') ?></legend>
         <?php
-            echo $this->Form->input('title');
-            echo $this->Form->input('wallet_id', ['options' => $wallets]);
-            echo $this->Form->input('type_id');
-            echo $this->Form->input('parent',['options' => $categories]);
+        echo $this->Form->input('title');
+        echo $this->Form->input('wallet_id', ['options' => $wallets]);
+        echo $this->Form->input('type_id');
+        ?>
+        <label for="parent"><?= _('Select parent')?></label>
+        <?php
+        echo $this->Form->select('parent', $options);
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

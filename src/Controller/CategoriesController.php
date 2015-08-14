@@ -31,6 +31,9 @@ class CategoriesController extends AppController
     public function index()
     {
         $user = $this->getCurrentUserInfo();
+        if(empty($user->last_wallet)){
+            return $this->redirect(['controller' => 'wallets', 'action' => 'add']);
+        }
         $this->paginate = [
             'conditions' => [
                 'Categories.wallet_id' => $user->last_wallet,
@@ -46,7 +49,7 @@ class CategoriesController extends AppController
 //        var_dump($wallets);die;
         $last_wallet = $user->last_wallet;
         $this->set('categories', $this->paginate($this->Categories));
-        $this->set(compact('$wallet','wallets','last_wallet'));
+        $this->set(compact('$wallet', 'wallets', 'last_wallet'));
         $this->set('_serialize', ['categories']);
     }
 
@@ -107,11 +110,10 @@ class CategoriesController extends AppController
                 'Wallets.user_id' => $this->Auth->user('id')
             ],
             'limit' => 200]);
-        $categories = $this->Categories->find('list')->where([
-                    'wallet_id' => $user->last_wallet
-                ])->all();
+        $income_categories = $this->Categories->getListIncomeCategories($user);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
         $types = $this->Categories->Types->find('list', ['limit' => 2]);
-        $this->set(compact('category', 'wallets', 'types', 'categories'));
+        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories'));
         $this->set('_serialize', ['category']);
     }
 
@@ -124,6 +126,7 @@ class CategoriesController extends AppController
      */
     public function edit($id = null)
     {
+        $user =$this->getCurrentUserInfo();
         $category = $this->Categories->get($id, [
             'contain' => []
         ]);
@@ -137,9 +140,11 @@ class CategoriesController extends AppController
                 $this->Flash->error(__('The category could not be saved. Please, try again.'));
             }
         }
+        $income_categories = $this->Categories->getListIncomeCategories($user);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
         $wallets = $this->Categories->Wallets->find('list', ['limit' => 200]);
         $types = $this->Categories->Types->find('list', ['limit' => 200]);
-        $this->set(compact('category', 'wallets', 'types'));
+        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories'));
         $this->set('_serialize', ['category']);
     }
 

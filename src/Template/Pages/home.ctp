@@ -42,6 +42,7 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
 
         <!-- Custom styles -->
         <link rel="stylesheet" href="/css/magister.css">
+        <?= $this->Html->css('style.css') ?>
 
         <!-- Fonts -->
         <?= $this->Html->css('font-awesome.min.css') ?>
@@ -51,26 +52,66 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
     <!-- use "theme-invert" class on bright backgrounds, also try "text-shadows" class -->
     <body class="theme-invert">
 
-        <nav class="mainmenu">
-            <div class="container">
-                <div class="dropdown">
-                    <button type="button" class="navbar-toggle" data-toggle="dropdown"><span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
-                    <!-- <a data-toggle="dropdown" href="#">Dropdown trigger</a> -->
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= Router::url(['_name' => 'home']) ?>" class="active">Hello</a></li>
+        <!--        <nav class="mainmenu">
+                    <div class="container">
+                        <div class="dropdown">
+                            <button type="button" class="navbar-toggle" data-toggle="dropdown"><span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+                             <a data-toggle="dropdown" href="#">Dropdown trigger</a> 
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                <li><a href="<?= Router::url(['_name' => 'home']) ?>" class="active"><?= __('Home') ?></a></li>
+        <?php if ($authUser) { ?>
+                                            <li><a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>"><?= __('Transaction') ?></a></li>
+                                            <li><a href="<?= Router::url(['controller' => 'categories', 'action' => 'index']) ?>"><?= __('Category') ?></a></li>
+                                            <li><a href="<?= Router::url(['controller' => 'wallets', 'action' => 'index']) ?>"><?= __('Wallets') ?></a></li>
+        <?php } ?>
+                                <li><a href="#about">About me</a></li>
+                                <li><a href="#themes">Themes</a></li>
+                                <li><a href="#contact">Get in touch</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>-->
+
+        <div id="header">
+            <nav class="navbar navbar-inverse navbar-static-top navbar-fixed-top" role="navigation">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu">
+                        <span class="sr-only">Toggle Navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="">Money Lover</a>
+                </div>
+                <div class="navbar-collapse collapse" id="main-menu">
+                    <ul class="nav navbar-nav"> 
+                        <li class="active"><a href="<?= Router::url(['_name' => 'home']) ?>"><?= __('Home') ?></a></li>
                         <?php if ($authUser) { ?>
                             <li><a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>"><?= __('Transacton') ?></a></li>
                             <li><a href="<?= Router::url(['controller' => 'categories', 'action' => 'index']) ?>"><?= __('Category') ?></a></li>
                             <li><a href="<?= Router::url(['controller' => 'wallets', 'action' => 'index']) ?>"><?= __('Wallets') ?></a></li>
                         <?php } ?>
-                        <li><a href="#about">About me</a></li>
-                        <li><a href="#themes">Themes</a></li>
-                        <li><a href="#contact">Get in touch</a></li>
+                        <li><a href=""><?= __('About') ?></a></li>
+                        <li><a href=""><?= __('Contact') ?></a></li>
+
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <?php if (!$authUser) { ?>
+                            <li><a href="<?= Router::url(['_name' => 'login']) ?>"><?= __('Login') ?></a></li>
+                            <li class="active"><a href="<?= Router::url(['_name' => 'signup']) ?>"><?= __('Sign Up') ?></a></li>
+                        <?php } else { ?>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo($authUser['email']) ?><span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="<?= Router::url(['_name' => 'logout']) ?>"><?= __('Logout') ?></a></li>
+                                    <li><a href="<?= Router::url(['_name' => 'changePass']) ?>"><?= __('Change Password') ?></a></li>
+                                </ul>
+                            </li>
+                        <?php } ?>
                     </ul>
                 </div>
-            </div>
-        </nav>
-
+            </nav>
+        </div> <!-- end #row header-->
         <!-- Main (Home) section -->
         <section class="section" id="head">
             <div class="container">
@@ -79,21 +120,22 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
                     <div class="col-md-10 col-lg-10 col-md-offset-1 col-lg-offset-1 text-center">	
 
                         <!-- Site Title, your name, HELLO msg, etc. -->
-                        <h1 class="title">Magister</h1>
-                        <h2 class="subtitle">Free html5 template by GetTemplate</h2>
+                        <h1 class="title"><?= __('Money lover') ?></h1>
 
                         <!-- Short introductory (optional) -->
-                        <h3 class="tagline">
-                            Potentially, the best place to tell people why they are here.<br>
-                            So, this is a demo page built to showcase the beauty of the template.
+                        <h3 class="subtitle">
+                            <?= __('The simplest way to manage your personal finances.') ?>
                         </h3>
 
                         <!-- Nice place to describe your site in a sentence or two -->
-                        <div class="row">
-                            <a href="<?= Router::url(['_name' => 'login']) ?>" class="btn btn-default btn-lg"><?= __('Login') ?></a>
-                            <a href="<?= Router::url(['_name' => 'signup']) ?>" class="btn btn-success btn-lg"><?= __('Sign Up') ?></a>
-                        </div>
-
+                        <?php if (empty($authUser)) { ?>
+                            <div class="row">
+                                <a href="<?= Router::url(['_name' => 'login']) ?>" class="btn btn-default btn-lg"><?= __('Login') ?></a>
+                                <a href="<?= Router::url(['_name' => 'signup']) ?>" class="btn btn-success btn-lg"><?= __('Sign Up') ?></a>
+                            </div>
+                        <?php } else { ?>
+                            <a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>" class="btn btn-success btn-lg"><?= __('Check Monthly Report') ?></a>
+                        <?php } ?>
                     </div> <!-- /col -->
                 </div> <!-- /row -->
 
@@ -200,8 +242,8 @@ $cakeDescription = 'CakePHP: the rapid development php framework';
 
 
         <!-- Load js libs only when the page is loaded. -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+        <?= $this->Html->script('jquery.min'); ?>
+        <?= $this->Html->script('bootstrap.min.js') ?>
         <script src="/js/modernizr.custom.72241.js"></script>
         <!-- Custom template scripts -->
         <script src="/js/magister.js"></script>

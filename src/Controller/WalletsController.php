@@ -131,10 +131,9 @@ class WalletsController extends AppController
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
+        $user = $this->getCurrentUserInfo();
         $wallet = $this->Wallets->get($id);
-        $wallet->status = 0;
-
-        if ($this->Wallets->save($wallet) && $this->Categories->deleteAllCategoriesOfWallet($wallet->id)) {
+        if ($this->Wallets->deleteWallet($user, $wallet)) {
             $this->Flash->success(__('The wallet has been deleted.'));
         } else {
             $this->Flash->error(__('The wallet could not be deleted. Please, try again.'));

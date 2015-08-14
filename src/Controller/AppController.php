@@ -43,6 +43,7 @@ class AppController extends Controller
     {
         parent::initialize();
         $this->loadModel('Users');
+        $this->loadModel('Wallets');
         $this->loadComponent('Flash');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
@@ -62,11 +63,22 @@ class AppController extends Controller
             'logoutRedirect' => '/',
             'unauthorizedRedirect' => $this->referer()
         ]);
-
         $this->set('authUser', $this->Auth->user());
+        $this->set('currentWallet', $this->getCurrentWallet());
         // Allow the display action so our pages controller
         // continues to work.
         $this->Auth->allow(['display']);
+    }
+
+    public function afterLogin()
+    {
+        Time::setToStringFormat('YYYY-MM-dd');
+        $time = new Time($this->Auth->user('date_of_birth'));
+        if ($time->isToday()) {
+            // Greet user with a happy birthday message
+            $this->set(compact('time'));
+            $this->Flash->success(__('Happy birthday to you...'));
+        }
     }
 
     /**
@@ -97,6 +109,21 @@ class AppController extends Controller
                 return $this->redirect($this->referer());
             }
         }
+    }
+
+    /**
+     * Get current wallet info
+     * 
+     * @return type
+     */
+    public function getCurrentWallet()
+    {
+        $user = $this->getCurrentUserInfo();
+        $current_wallet = $this->Wallets->find('all',[
+            'conditions' => ['id' => $user->last_wallet],
+            'fields' => ['id', 'title', 'current_balance'],
+        ]);
+        return $current_wallet;
     }
 
     public function beforeFilter(Event $event)

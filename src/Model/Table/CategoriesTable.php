@@ -96,7 +96,7 @@ class CategoriesTable extends Table
     /**
      * Create default categories after creating a wallet
      * 
-     * @param type $user
+     * @param type $wallet
      * @return Category
      */
     public function addDefaultCategories($wallet)
@@ -116,22 +116,22 @@ class CategoriesTable extends Table
         $loan = new Category([
             'title' => __('Loan'),
             'wallet_id' => $wallet->id,
-            'type_id' => 1,
+            'type_id' => 2,
             'is_locked' => 1,
         ]);
         $received = new Category([
             'title' => __('Received'),
             'wallet_id' => $wallet->id,
-            'type_id' => 2,
+            'type_id' => 1,
             'is_locked' => 1,
         ]);
         $debt = new Category([
             'title' => __('Debt'),
             'wallet_id' => $wallet->id,
-            'type_id' => 2,
+            'type_id' => 1,
             'is_locked' => 1,
         ]);
-        $default_categories = [$difference_income, $difference_expense, $loan, $received, $debt];
+        $default_categories = [$difference_income, $received, $difference_expense, $loan, $debt];
         return $default_categories;
     }
 
@@ -162,7 +162,7 @@ class CategoriesTable extends Table
                         'Categories.type_id' => 1,
                         'Categories.status' => 1,
                     ],
-                    'limit' => 200])->toArray();
+                ])->toArray();
         return $income_categories;
     }
 
@@ -179,7 +179,7 @@ class CategoriesTable extends Table
                         'Categories.type_id' => 2,
                         'Categories.status' => 1,
                     ],
-                    'limit' => 200])->toArray();
+                ])->toArray();
         return $expense_categories;
     }
 
@@ -240,7 +240,7 @@ class CategoriesTable extends Table
         });
         return true;
     }
-    
+
     /**
      * Get id of difference category
      * 
@@ -252,4 +252,5 @@ class CategoriesTable extends Table
         $diffrentCategory = $this->find()->where(['wallet_id' => $wallet_id, 'title' => 'Difference', 'type_id' => $type_id])->first();
         return $diffrentCategory->id;
     }
+
 }

@@ -2,11 +2,10 @@
 
 namespace App\Model\Table;
 
-use App\Model\Entity\Wallet;
-use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 /**
  * Wallets Model
@@ -92,17 +91,6 @@ class WalletsTable extends Table
     }
 
     /**
-     * Get Id of current wallet
-     * 
-     * @param type $user
-     * @return type
-     */
-    public function getCurrentWalletId($user)
-    {
-        return $user->last_wallet;
-    }
-
-    /**
      * Get all wallets of method
      * 
      * @param type $user
@@ -110,13 +98,76 @@ class WalletsTable extends Table
      */
     public function getAllWalletsOfUser($user)
     {
-        $wallets = $this->Transactions->Wallets->find('list', [
+        $wallets = $this->find('list', [
             'conditions' => [
-                'Wallets.user_id' => $user->id
+                'Wallets.user_id' => $user->id,
+                'Wallets.status' => 1,
             ],
             'limit' => 200
         ]);
         return $wallets;
     }
-    
+
+    /**
+     * Count wallets of user method
+     * 
+     * @param type $user_id
+     * @return type
+     */
+    public function countWallets($user_id)
+    {
+        $count_wallets = $this->find('all', [
+                    'conditions' => [
+                        'user_id' => $user_id,
+                        'status' => 1,
+                    ]
+                ])->count();
+        return$count_wallets;
+    }
+
+    /**
+     * Delete wallet method
+     * 
+     * @param type $user
+     * @param type $wallet
+     * @return boolean
+     */
+    public function deleteWallet($user, $wallet)
+    {
+        $conn = ConnectionManager::get('default');
+        $conn->begin();
+        try {
+            $this->saveAfterDeleleWallet($user, $wallet);
+            $conn->commit();
+        } catch (Exception $e) {
+            $conn->rollback();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Save user and wallet after deleting wallet
+     * 
+     * @param type $user
+     * @param type $wallet
+     * @return boolean
+     */
+    public function saveAfterDeleleWallet($user, $wallet)
+    {
+        $wallet->status = 0;
+        $user->total_balance = $user->total_balance - $wallet->current_balance;
+
+        // checking number wallets of user
+        if ($this->countWallets($user->id) == 1) {
+            $user->last_wallet = 0;
+        }
+
+        if ($this->save($wallet) && $this->Users->save($user) && $this->Categories->deleteAllCategoriesOfWallet($wallet->id)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

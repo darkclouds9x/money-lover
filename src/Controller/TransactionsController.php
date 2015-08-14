@@ -3,9 +3,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-use App\Model\Entity\Transaction;
 use Cake\I18n\Time;
-use Cake\Database\Connection;
 
 /**
  * Transactions Controller
@@ -32,16 +30,29 @@ class TransactionsController extends AppController
      *
      * @return void
      */
-    public function index($list_month = null, $list_year = null)
+    public function index($list_day = null, $list_month = null, $list_year = null)
     {
         $user = $this->getCurrentUserInfo();
-        $current_month = Time::now()->month;
-        $current_year = Time::now()->year;
-        $current_wallet = $this->Wallets->get($user->last_wallet);
+        $now = Time::now();
+        $current_month = $now->month;
+        $current_year = $now->year;
+        $current_day = $now->day;
+        $time_range = null;
 
+        if (empty($user->last_wallet)) {
+            return $this->redirect(['controller' => 'wallets', 'action' => 'add']);
+        }
+        $current_wallet = $this->Wallets->get($user->last_wallet);
         if (empty($list_month) || empty($list_year)) {
+            $list_day = $current_day;
             $list_month = $current_month;
             $list_year = $current_year;
+        }
+                if ($this->request->is('post')) {
+            if ($this->request->is('post')) {
+                $data = $this->request->data['time_range'];
+                $condition_list = $this->changeTimeRange($data, $current_wallet->id, $list_day, $list_month, $list_year);
+            }
         }
         if ($current_wallet->checkCreatedWallet($list_month, $list_year) == false) {
             $current_wallet->init_balance = $current_wallet->current_balance = 0;
@@ -53,13 +64,19 @@ class TransactionsController extends AppController
                 'MONTH(Transactions.done_date)' => $list_month,
                 'YEAR(Transactions.done_date)' => $list_year,
             ],
-            'contain' => ['Categories.Types']
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
         ];
         $this->set('transactions', $this->paginate($this->Transactions));
+        $types = $this->Types->find('all', [
+            'fields' => ['title'],
+            'limit' => 2,
+        ]);
         $wallets = $this->Wallets->getAllWalletsOfUser($user);
         $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $list_month, $list_year);
+        $total_balance = $user->total_balance;
         $last_wallet = $user->last_wallet;
-        $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports'));
+        $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports', 'total_balance', 'types'));
         $this->set('_serialize', ['transactions']);
         $this->set('title', __('Monthly Report'));
     }
@@ -105,11 +122,9 @@ class TransactionsController extends AppController
             }
             if ($this->Transactions->save($transaction) && $this->Wallets->save($wallet)) {
                 $this->Flash->success(__('The transaction has been saved.'));
-//                $this->commit();
-//                return $this->redirect(['action' => 'index']);
+                return $this->redirect(['controller' => 'transactions', 'action' => 'index']);
             } else {
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
-//                $this->rollback();
             }
         }
         $this->set(compact('transaction', 'income_categories', 'expense_categories'));
@@ -132,7 +147,7 @@ class TransactionsController extends AppController
             $transaction = $this->Transactions->patchEntity($transaction, $this->request->data);
             if ($this->Transactions->save($transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect(['controller' => 'transactions', 'action' => 'index']);
             } else {
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
             }
@@ -159,8 +174,6 @@ class TransactionsController extends AppController
         } else {
             $this->Flash->error(__('The transaction could not be deleted. Please, try again.'));
         }
-//        return $this->redirect(['action' => 'index']);
-//        $this->index();
         $this->redirect(['controller' => 'transactions', 'action' => 'index']);
     }
 
@@ -177,29 +190,16 @@ class TransactionsController extends AppController
             $data = $this->request->data;
             $receiver_wallet = $this->Wallets->get($data['to_wallet']);
             $transfer_wallet = $this->Wallets->get($data['from_wallet']);
+            $transfer_transaction = $this->Transactions->setTransferTransaction($data, $transfer_wallet->id, $receiver_wallet->title);
+            $receiver_transaction = $this->Transactions->setReceiverTransaction($data, $receiver_wallet->id, $transfer_wallet->title);
 
-            $transfer_transaction = $this->Transactions->newEntity([
-                'wallet_id' => $transfer_wallet->id,
-                'category_id' => $data['category_id'],
-                'title' => __('Transfer Money'),
-                'amount' => $data['amount'],
-                'note' => __('Transfer money to ') . $receiver_wallet->title,
-            ]);
-
-            $receiver_transaction = $this->Transactions->newEntity([
-                'wallet_id' => $receiver_wallet->id,
-                'category_id' => $this->Categories->getReceiverCategoryId($receiver_wallet->id),
-                'title' => __('Transfer Money'),
-                'amount' => $data['amount'],
-                'note' => __('Received from ') . $transfer_wallet->title,
-            ]);
             if ($transfer_wallet->checkCreatedWallet($data['done_date']['month'], $data['done_date']['year'])) {
                 $transfer_wallet->current_balance = $transfer_wallet->current_balance - $transfer_transaction->amount;
                 $receiver_wallet->current_balance = $receiver_wallet->current_balance + $receiver_transaction->amount;
             }
             if ($this->Transactions->saveTransfer($transfer_wallet, $receiver_wallet, $transfer_transaction, $receiver_transaction)) {
                 $this->Flash->success(__('The transaction has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                return $this->redirect(['controller' => 'transactions', 'action' => 'index']);
             } else {
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
             }
@@ -208,11 +208,49 @@ class TransactionsController extends AppController
         $wallets = $this->Transactions->Wallets->find('list', [
             'conditions' => [
                 'Wallets.user_id' => $user->id,
+                'Wallets.status' => 1,
             ],
             'limit' => 200]);
         $this->set(compact('wallets', 'expense_categories', 'user', 'transaction'));
         $this->set('_serialize', ['transaction']);
         $this->set('title', __('Transfer Money Between Wallets'));
+    }
+
+    /**
+     * Change time range
+     * 
+     * @param type $wallet_id
+     * @param type $list_day
+     * @param type $list_month
+     * @param type $list_year
+     * @return type
+     */
+    public function changeTimeRange($data, $wallet_id, $list_day, $list_month, $list_year)
+    {
+
+        switch ($data) {
+            case 'day' :
+                $condition_list = $this->Transactions->conditionDay($wallet_id, $list_day, $list_month, $list_year);
+                var_dump($condition_list);
+                die;
+                break;
+            case 'week' :
+                $condition_list = $this->Transactions->Week();
+                break;
+            case 'month' :
+                $condition_list = $this->Transactions->conditionMonth();
+                break;
+            case 'quarter' :
+                $condition_list = $this->Transactions->conditionQuarter();
+                break;
+            case 'year' :
+                $condition_list = $this->Transactions->conditionYear();
+                break;
+            case 'all' :
+                $condition_list = $this->Transactions->conditionAll();
+                break;
+        }
+        return [$condition_list, $data];
     }
 
     /**
@@ -226,7 +264,7 @@ class TransactionsController extends AppController
         $action = $this->request->params['action'];
 
         // The add and index actions are always allowed.
-        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete', 'transferMoney'])) {
+        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete', 'transferMoney', 'changeTimeRange'])) {
             return true;
         }
         // All other actions require an id.

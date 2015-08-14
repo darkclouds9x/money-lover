@@ -33,7 +33,6 @@ class UsersTable extends Table
         $this->hasMany('Wallets', [
             'foreignKey' => 'user_id'
         ]);
-//        $this->verication_code =  md5(uniqid("yourrandomstringyouwanttoaddhere", true));
     }
 
     /**

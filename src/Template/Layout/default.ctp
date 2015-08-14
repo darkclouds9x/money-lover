@@ -56,7 +56,7 @@ use Cake\Routing\Router;
                     <ul class="nav navbar-nav"> 
                         <li class="active"><a href="<?= Router::url(['_name' => 'home']) ?>"><?= __('Home') ?></a></li>
                         <?php if ($authUser) { ?>
-                            <li><a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>"><?= __('Transacton') ?></a></li>
+                            <li><a href="<?= Router::url(['controller' => 'transactions', 'action' => 'index']) ?>"><?= __('Transaction') ?></a></li>
                             <li><a href="<?= Router::url(['controller' => 'categories', 'action' => 'index']) ?>"><?= __('Category') ?></a></li>
                             <li><a href="<?= Router::url(['controller' => 'wallets', 'action' => 'index']) ?>"><?= __('Wallets') ?></a></li>
                         <?php } ?>
@@ -67,28 +67,36 @@ use Cake\Routing\Router;
                     <ul class="nav navbar-nav navbar-right">
                         <?php if (!$authUser) { ?>
                             <li><a href="<?= Router::url(['_name' => 'login']) ?>"><?= __('Login') ?></a></li>
-                            <li class="active"><a href="<?= Router::url(['_name' => 'signup']) ?>"><?= __('Sign Up') ?></a></li>
+                            <li class=><a href="<?= Router::url(['_name' => 'signup']) ?>"><?= __('Sign Up') ?></a></li>
                         <?php } else { ?>
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><?php echo($authUser['email']) ?><span class="caret"></span></a>
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                                    <?php
+                                    if (!empty($current_wallet)) {
+                                        echo($current_wallet['title'] . ':' . $current_wallet['current_balance'] );
+                                        echo ' | ';
+                                    }
+                                    echo($authUser['email']);
+                                    ?>
+                                    <span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu">
                                     <li><a href="<?= Router::url(['_name' => 'logout']) ?>"><?= __('Logout') ?></a></li>
                                     <li><a href="<?= Router::url(['_name' => 'changePass']) ?>"><?= __('Change Password') ?></a></li>
                                 </ul>
                             </li>
-                        <?php } ?>
+<?php } ?>
                     </ul>
                 </div>
             </nav>
-        </div> <!-- end .row navbar-->
+        </div> <!-- end #row header-->
 
         <div id="container">
             <div id="content">
                 <?= $this->Flash->render() ?>
                 <?= $this->Flash->render('auth') ?>
-                <?php echo $this->element('errors') ?>
+                    <?php echo $this->element('errors') ?>
                 <div class="row">
-                    <?= $this->fetch('content') ?>
+<?= $this->fetch('content') ?>
                 </div>
             </div>
             <footer>

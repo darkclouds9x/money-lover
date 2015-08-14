@@ -6,6 +6,7 @@
         <li><?= $this->Html->link(__('New User'), ['controller' => 'Users', 'action' => 'add']) ?></li>
         <li><?= $this->Html->link(__('List Categories'), ['controller' => 'Categories', 'action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('New Category'), ['controller' => 'Categories', 'action' => 'add']) ?></li>
+        <li><?= $this->Html->link(__('Transfer Money Between Wallets'), ['_name' => 'transferMoney']) ?></li>
     </ul>
 </div>
 <div class="wallets index large-10 medium-9 columns">
@@ -13,7 +14,6 @@
     <thead>
         <tr>
             <th><?= $this->Paginator->sort('id') ?></th>
-            <th><?= $this->Paginator->sort('title') ?></th>
             <th><?= $this->Paginator->sort('init_balance') ?></th>
             <th><?= $this->Paginator->sort('current_balance') ?></th>
             <th><?= $this->Paginator->sort('created') ?></th>

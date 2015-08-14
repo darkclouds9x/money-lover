@@ -4,7 +4,7 @@
         <li><?= $this->Html->link(__('New Category'), ['action' => 'add']) ?></li>
         <li><?= $this->Html->link(__('List Wallets'), ['controller' => 'Wallets', 'action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('New Wallet'), ['controller' => 'Wallets', 'action' => 'add']) ?></li>
-        <li><?= $this->Html->link(__('List Transactions'), ['controller' => 'Transactions', 'action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('List Transactions'), ['controller' => 'transactions', 'action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('New Transaction'), ['controller' => 'Transactions', 'action' => 'add']) ?></li>
     </ul>
 </div>

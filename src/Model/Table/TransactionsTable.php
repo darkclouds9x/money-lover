@@ -138,6 +138,32 @@ class TransactionsTable extends Table
     }
 
     /**
+     * Get condition to get transaction of a day
+     * 
+     * @param type $wallet_id
+     * @param type $list_day
+     * @param type $list_month
+     * @param type $list_year
+     * @return array
+     */
+    public function conditionDay($wallet_id, $list_day, $list_month, $list_year)
+    {
+        $condition_day = [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'DAY(Transactions.done_date)' => $list_day,
+                'MONTH(Transactions.done_date)' => $list_month,
+                'YEAR(Transactions.done_date)' => $list_year,
+            ],
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
+        ];
+        return $condition_day;
+    }
+    
+
+    /**
      * Get all transactions before month
      * 
      * @param type $wallet_id
@@ -167,14 +193,14 @@ class TransactionsTable extends Table
      * @param type $list_year
      * @return type
      */
-    public function getTransactionsAfterMonth($wallet_id, $list_month, $list_year)
+    public function getTransactionsAfterMonth($wallet_id, $list_time)
     {
         $transactions = $this->find('all', [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.done_date) >' => $list_month,
-                'YEAR(Transactions.done_date) >=' => $list_year,
+                'MONTH(Transactions.done_date) >' => $list_time->month,
+                'YEAR(Transactions.done_date) >=' => $list_time->year,
             ],
             'contain' => ['Categories']
         ]);
@@ -308,6 +334,46 @@ class TransactionsTable extends Table
         } else {
             return false;
         }
+    }
+
+    /**
+     * Set value for transfer transaction
+     * 
+     * @param type $data
+     * @param type $transfer_wallet_id
+     * @param type $receiver_wallet_title
+     * @return type
+     */
+    public function setTransferTransaction($data, $transfer_wallet_id, $receiver_wallet_title)
+    {
+        $transfer_transaction = $this->newEntity([
+            'wallet_id' => $transfer_wallet_id,
+            'category_id' => $data['category_id'],
+            'title' => __('Transfer Money'),
+            'amount' => $data['amount'],
+            'note' => __('Transfer money to ') . $receiver_wallet_title,
+        ]);
+        return $transfer_transaction;
+    }
+
+    /**
+     * Set value for receiver transaction
+     * 
+     * @param type $data
+     * @param type $receiver_wallet_id
+     * @param type $transfer_wallet_title
+     * @return type
+     */
+    public function setReceiverTransaction($data, $receiver_wallet_id, $transfer_wallet_title)
+    {
+        $receiver_transaction = $this->newEntity([
+            'wallet_id' => $receiver_wallet_id,
+            'category_id' => $this->Categories->getReceiverCategoryId($receiver_wallet_id),
+            'title' => __('Transfer Money'),
+            'amount' => $data['amount'],
+            'note' => __('Received from ') . $transfer_wallet_title,
+        ]);
+        return $receiver_transaction;
     }
 
 }
