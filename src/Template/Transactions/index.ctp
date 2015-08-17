@@ -1,4 +1,11 @@
 <?= $this->assign('title', $title) ?>
+<?php
+
+use Cake\I18n\Time;
+
+$time = Time::now();
+$time->setDate($list_year, $list_month, $list_day);
+?>
 <div class="actions columns large-2 medium-3">
     <h3><?= __('Actions') ?></h3>
     <ul class="side-nav">
@@ -38,9 +45,9 @@
                 'all' => __("All"),
             ];
             ?>
-            <label for="time_range"><?= _('Select parent') ?></label>
+            <label for="time_range"><?= _('Select time range') ?></label>
             <?php
-            echo $this->Form->select('time_range', $options, ['default' => 2]);
+            echo $this->Form->select('time_range', $options, ['default' => $time_range]);
             ?>
             <?= $this->Form->button(__('Change time range')) ?>
             <?= $this->Form->end() ?>
@@ -51,28 +58,15 @@
     <div class="row monthly-report">
         <div class="row date-range">
             <div class="col-sm-2">
-                <?php if ($list_month == 1): ?>
-                    <?= $this->Html->link(__('Last month'), ['action' => 'index', ($list_month = 12), ($list_year - 1)]) ?>
-                <?php else : ?>
-                    <?= $this->Html->link(__('Last month'), ['action' => 'index', ($list_month - 1), $list_year]) ?>
-                <?php endif ?>
+                <?= $this->Html->link(__('Last'), ['action' => 'index', $time_range, $last = 'last'], ['class' => 'change-time']) ?>
             </div>
             <div class="col-sm-8">
-                <?php if (($list_month == $current_month) && ($list_year == $current_year)): ?>
-                    <h3 class="text-center"><?= __('Transactions List of This month') ?></h3>
-                <?php else: ?>
-                    <h3 class="text-center">
-                        <?= __('Transactions List of ') ?>
-                        <?php echo $list_month . '/ ' . $list_year; ?>
-                    </h3>
-                <?php endif ?>
+
+                <h3 class="text-center"><?php echo $titleOfTransactionsList ?></h3>
+
             </div>
             <div class="col-sm-2">
-                <?php if ($list_month == 12): ?>
-                    <?= $this->Html->link(__('Next month'), ['action' => 'index', ($list_month = 1), ($list_year + 1)]) ?>
-                <?php else: ?>
-                    <?= $this->Html->link(__('Next month'), ['action' => 'index', ($list_month + 1), $list_year]) ?>
-                <?php endif ?>
+                <?= $this->Html->link(__('Next'), ['action' => 'index', ($time_range), $next = 'next'], ['class' => 'change-time']) ?>
             </div>
         </div>
         <?php if (count($transactions) == 0) : ?>
@@ -140,3 +134,20 @@
         <p><?= $this->Paginator->counter() ?></p>
     </div>
 </div>
+
+<script>
+    $(document).ready(function(){
+    $(.change - time).click(function(){
+    $.ajax({
+    type: "POST",
+            url: <?= \Cake\Routing\Route\Route::url(['controller' => 'transactions', 'action' => 'index']) ?>
+    data:{
+    time: $time
+    },
+            success: function(){
+            }
+
+    });
+    });
+            });
+</script>

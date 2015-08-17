@@ -161,7 +161,49 @@ class TransactionsTable extends Table
         ];
         return $condition_day;
     }
+    /**
+     * Condition to get transactions of month
+     * 
+     * @param type $wallet_id
+     * @param type $list_month
+     * @param type $list_year
+     * @return array
+     */
+    public function conditionMonth($wallet_id, $list_month, $list_year)
+    {
+        $condition_month = [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'MONTH(Transactions.done_date)' => $list_month,
+                'YEAR(Transactions.done_date)' => $list_year,
+            ],
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
+        ];
+        return $condition_month;
+    }
     
+    /**
+     * Condition to get transactions of year
+     * 
+     * @param type $wallet_id
+     * @param type $list_year
+     * @return array
+     */
+        public function conditionYear($wallet_id,$list_year)
+    {
+        $condition_year = [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'YEAR(Transactions.done_date)' => $list_year,
+            ],
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
+        ];
+        return $condition_year;
+    } 
 
     /**
      * Get all transactions before month

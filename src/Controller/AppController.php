@@ -119,11 +119,13 @@ class AppController extends Controller
     public function getCurrentWallet()
     {
         $user = $this->getCurrentUserInfo();
-        $current_wallet = $this->Wallets->find('all',[
+        if(!empty($user)){
+                    $current_wallet = $this->Wallets->find('all',[
             'conditions' => ['id' => $user->last_wallet],
             'fields' => ['id', 'title', 'current_balance'],
         ]);
         return $current_wallet;
+        }
     }
 
     public function beforeFilter(Event $event)
