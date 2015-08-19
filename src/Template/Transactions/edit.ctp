@@ -13,14 +13,20 @@
 </div>
 <div class="transactions form large-10 medium-9 columns">
     <?= $this->Form->create($transaction) ?>
+    <?php
+    $options = [
+        __('Income Category') => $income_categories,
+        __('Expense Category') => $expense_categories,
+    ];
+    ?>
     <fieldset>
         <legend><?= __('Edit Transaction') ?></legend>
         <?php
         echo $this->Form->input('title');
-        echo $this->Form->input('category_id', ['options' => $categories]);
+        echo $this->Form->label("Category");
+        echo $this->Form->select('category_id', $options);
         echo $this->Form->input('amount');
         echo $this->Form->input('note');
-        echo $this->Form->input('parent');
         echo $this->Form->input('done_date');
         ?>
     </fieldset>

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\I18n\Time;
+use DateTime;
 
 /**
  * Transactions Controller
@@ -30,49 +31,39 @@ class TransactionsController extends AppController
      *
      * @return void
      */
-    public function index($time_range = null, $change_time = null)
+    public function index($time_range = 'month', $current = 0)
     {
         $user = $this->getCurrentUserInfo();
         $now = Time::now();
-        $current_month = $now->month;
-        $current_year = $now->year;
-        $current_day = $now->day;
-
         //add first wallet
         if (empty($user->last_wallet)) {
             return $this->redirect(['controller' => 'wallets', 'action' => 'add']);
         }
-
         //get info last wallet
         $current_wallet = $this->Wallets->get($user->last_wallet);
-        if (empty($change_time)) {
-            $list_day = $current_day;
-            $list_month = $current_month;
-            $list_year = $current_year;
-        }
 
-        //request to get last list or next list
+        //change time_range request
+        if ($this->request->is('post')) {
+            if (!empty($this->request->data['time_range'])) {
+                $data = $this->request->data();
+                var_dump($data);die;
+                $time_range = $this->request->data['time_range'];
+            }
+        }
+        // get conditions of last list or next list
         if ($this->request->is('get')) {
             $data = $this->request->params['pass'];
             if (!empty($data)) {
                 $time_range = $data[0];
-                $change_time = $data[1];
-                if ($change_time == 'last') {
-                    $last_list = $this->lastList($time_range, $list_day, $list_month, $list_year);
-                } elseif ($change_time == 'next') {
-                    $next_list = $this->nextList($time_range, $list_day, $list_month, $list_year);
-                }
+                $current = $data[1];
             }
         }
-        //change time_range request
-        if ($this->request->is('post')) {
-            $time_range = $this->request->data['time_range'];
-        } else {
-            $time_range = 'month';
-        }
-        $condition_list = $this->changeTimeRange($time_range, $current_wallet->id, $list_day, $list_month, $list_year);
+        $time_to_list = $this->getTimeToList($time_range, $now, $current);
+
+
+        $condition_list = $this->changeTimeRange($time_range, $current_wallet->id, $time_to_list, $current);
         $this->paginate = $condition_list;
-        if ($current_wallet->checkCreatedWallet($list_month, $list_year) == false) {
+        if ($current_wallet->checkCreatedWallet($time_to_list) == false) {
             $current_wallet->init_balance = $current_wallet->current_balance = 0;
         }
 
@@ -81,12 +72,12 @@ class TransactionsController extends AppController
             'fields' => ['title'],
             'limit' => 2,
         ]);
-        $titleOfTransactionsList = $this->titleOfTransactionsList($time_range, $list_day, $list_month, $list_year);
+        $titleOfTransactionsList = $this->titleOfTransactionsList($time_range, $time_to_list, $current);
         $wallets = $this->Wallets->getAllWalletsOfUser($user);
-        $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $list_month, $list_year);
+        $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $now, $current);
         $total_balance = $user->total_balance;
         $last_wallet = $user->last_wallet;
-        $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'list_month', 'list_year', 'current_month', 'current_year', 'mothly_reports', 'total_balance', 'types', 'time_range', 'titleOfTransactionsList'));
+        $this->set(compact('current_wallet', 'wallets', 'last_wallet', 'now', 'mothly_reports', 'total_balance', 'types', 'time_range', 'titleOfTransactionsList', 'current'));
         $this->set('_serialize', ['transactions']);
         $this->set('title', __('Monthly Report'));
     }
@@ -150,6 +141,7 @@ class TransactionsController extends AppController
      */
     public function edit($id = null)
     {
+        $user = $this->getCurrentUserInfo();
         $transaction = $this->Transactions->get($id, [
             'contain' => []
         ]);
@@ -162,8 +154,9 @@ class TransactionsController extends AppController
                 $this->Flash->error(__('The transaction could not be saved. Please, try again.'));
             }
         }
-        $categories = $this->Transactions->Categories->find('list', ['limit' => 200]);
-        $this->set(compact('transaction', 'categories'));
+        $income_categories = $this->Categories->getListIncomeCategories($user);
+        $expense_categories = $this->Categories->getListExpenseCategories($user);
+        $this->set(compact('transaction', 'income_categories', 'expense_categories'));
         $this->set('_serialize', ['transaction']);
     }
 
@@ -226,35 +219,26 @@ class TransactionsController extends AppController
         $this->set('title', __('Transfer Money Between Wallets'));
     }
 
-    /**
-     * Change time range
-     * 
-     * @param type $wallet_id
-     * @param type $list_day
-     * @param type $list_month
-     * @param type $list_year
-     * @return type
-     */
-    public function changeTimeRange($time_range, $wallet_id, $list_day, $list_month, $list_year)
+    public function changeTimeRange($time_range, $wallet_id, $now, $current)
     {
         switch ($time_range) {
             case 'day' :
-                $condition_list = $this->Transactions->conditionDay($wallet_id, $list_day, $list_month, $list_year);
+                $condition_list = $this->Transactions->conditionDay($wallet_id, $now);
                 break;
             case 'week' :
-                $condition_list = $this->Transactions->Week();
+                $condition_list = $this->Transactions->conditionWeek($wallet_id, $now, $current);
                 break;
             case 'month' :
-                $condition_list = $this->Transactions->conditionMonth($wallet_id, $list_month, $list_year);
+                $condition_list = $this->Transactions->conditionMonth($wallet_id, $now);
                 break;
             case 'quarter' :
-                $condition_list = $this->Transactions->conditionQuarter();
+                $condition_list = $this->Transactions->conditionQuarter($wallet_id, $now);
                 break;
             case 'year' :
-                $condition_list = $this->Transactions->conditionYear();
+                $condition_list = $this->Transactions->conditionYear($wallet_id, $now);
                 break;
-            case 'all' :
-                $condition_list = $this->Transactions->conditionAll();
+            default :
+                $condition_list = $this->Transactions->conditionAll($wallet_id);
                 break;
         }
         return $condition_list;
@@ -297,45 +281,72 @@ class TransactionsController extends AppController
      * @param type $list_year
      * @return string
      */
-    public function titleOfTransactionsList($time_range, $list_day, $list_month, $list_year)
+    public function titleOfTransactionsList($time_range, $time, $current)
     {
-        $now = Time::now();
-        $current_month = $now->month;
-        $current_year = $now->year;
-        $current_day = $now->day;
         switch ($time_range) {
             case 'day':
-                if (($list_day == $current_day) && ($list_month == $current_month) && ($list_year == $current_year)) {
-                    $titleOfTransactionsList = __('Transactions List of Today');
-                } elseif (($list_day == ($current_day - 1)) && ($list_month == $current_month) && ($list_year == $current_year)) {
-                    $titleOfTransactionsList = __('Transactions List of Yesterday');
-                } elseif ((($list_day == $current_day + 1) && ($list_month == $current_month) && ($list_year == $current_year))) {
-                    $titleOfTransactionsList = __('Transactions List of Tomorrow');
+                if ($time->isWithinNext(0)) {
+                    $titleOfTransactionsList = __('Today');
+                } elseif ($time->wasWithinLast(1)) {
+                    $titleOfTransactionsList = __('Yesterday');
+                } elseif ($time->isWithinNext(1)) {
+                    $titleOfTransactionsList = __('Tomorrow');
                 } else {
-                    $titleOfTransactionsList = __('Transactions List of ') . $list_day . '/ ' . $list_month . '/ ' . $list_year;
+                    $titleOfTransactionsList = $time->day . '/ ' . $time->month . '/ ' . $time->year;
                 }
                 break;
 
             case 'month':
-                if (($list_month == $current_month) && ($list_year == $current_year)) {
-                    $titleOfTransactionsList = __('Transactions List of This Month');
-                } elseif (($list_day == ($current_month - 1)) && ($list_year == $current_year)) {
-                    $titleOfTransactionsList = __('Transactions List of Last Month');
-                } elseif ((($list_day == $current_month + 1) && ($list_year == $current_year))) {
-                    $titleOfTransactionsList = __('Transactions List of Next Month');
+                if ($time->isThisMonth()) {
+                    $titleOfTransactionsList = __('This Month');
+                } elseif ($time->wasWithinLast('1 month')) {
+                    $titleOfTransactionsList = __('Last Month');
+                } elseif ($time->isWithinNext('1 month')) {
+                    $titleOfTransactionsList = __('Next Month');
                 } else {
-                    $titleOfTransactionsList = __('Transactions List of ') . $list_month . '/ ' . $list_year;
+                    $titleOfTransactionsList = $time->month . '/ ' . $time->year;
                 }
                 break;
             case 'year':
-                if ($list_year == $current_year) {
-                    $titleOfTransactionsList = __('Transactions List of This Year');
-                } elseif (($list_year - 1) == $current_year) {
-                    $titleOfTransactionsList = __('Transactions List of Last Year');
-                } elseif (($list_year + 1) == $current_year) {
-                    $titleOfTransactionsList = __('Transactions List of Next Year');
+                if ($time->isThisYear()) {
+                    $titleOfTransactionsList = __('This Year');
+                } elseif ($time->wasWithinLast('1 year')) {
+                    $titleOfTransactionsList = __('Last Year');
+                } elseif ($time->isWithinNext('1 year')) {
+                    $titleOfTransactionsList = __('Next Year');
                 } else {
-                    $titleOfTransactionsList = __('Transactions List of ') . $list_year;
+                    $titleOfTransactionsList = $time->year;
+                }
+                break;
+            case 'week':
+                $now = Time::now()->weekOfYear;
+                $day_of_week = Time::now()->dayOfWeek;
+                $start = new DateTime((-$day_of_week + 7 * $current +1) . ' Days');
+                $end = new DateTime((7 - $day_of_week + 7 * $current) . ' Day');
+                $current_week = $time->weekOfYear;
+                if ($now == $current_week) {
+                    $titleOfTransactionsList = __('This Week');
+                } elseif ($current_week === ($now - 1)) {
+                    $titleOfTransactionsList = __('Last Week');
+                } elseif (($current_week === ($now + 1))) {
+                    $titleOfTransactionsList = __('Next Week');
+                } else {
+                    $titleOfTransactionsList = $start->format('d/m/o') . ' => ' . $end->format('d/m/o');
+                }
+                break;
+            case 'quarter' :
+                $date = new Time();
+                $now_quarter = ceil(( $date->month)/3);
+                $time_quarter = $time->toQuarter();
+
+                if (($now_quarter == $time_quarter) && ($date->year == $time->year)) {
+                    $titleOfTransactionsList = __('This Quarter');
+                } elseif ((($now_quarter - $time_quarter === 1) && ($now->year === $time->year)) || ( $now_quarter === 1 && $time_quarter === 4 && ( $now->year - $time->year === 1))) {
+                    $titleOfTransactionsList = __('Last Quarter');
+                } elseif ((($now_quarter - $time_quarter === -1) && ($now->year === $time->year)) || ( $now_quarter === 4 && $time_quarter === 1 && ( $now->year - $time->year === -1))) {
+                    $titleOfTransactionsList = __('Next Quarter');
+                } else {
+                    $titleOfTransactionsList = __('Q') . $time_quarter . '/ ' . $time->year;
                 }
                 break;
         }
@@ -343,70 +354,34 @@ class TransactionsController extends AppController
     }
 
     /**
-     * Get time of last list
+     * Get time to list data
      * 
      * @param type $time_range
-     * @param type $list_day
-     * @param type $list_month
-     * @param type $list_year
+     * @param type $now
+     * @param type $current
      * @return type
      */
-    public function lastList($time_range, $list_day, $list_month, $list_year)
+    public function getTimeToList($time_range, $now, $current)
     {
-        $time = Time::now();
-        $time->setDate($list_year, $list_month, $list_day);
         switch ($time_range) {
             case 'day':
-                $time = $time->subDay();
+                $now->modify($current . ' days');
                 break;
             case 'month':
-                $time = $time->subMonth();
+                $now->modify($current . ' months');
                 break;
             case 'year':
-                $time = $time->subYear();
+                $now->modify($current . ' years');
                 break;
             case 'week':
-                $time = $time->subWeek();
-                break;
-            case 'week':
-                $time = $time->subWeek();
+                $now->modify($current . ' weeks');
                 break;
             case 'quarter':
-                $time = $time->subMonths(3);
+                $current = $current * 3;
+                $now->modify($current . ' months');
+                break;
         }
-        return [$time_range, $time];
+        return $now;
     }
 
-    /**
-     * Get time of next list
-     * 
-     * @param type $time_range
-     * @param type $list_day
-     * @param type $list_month
-     * @param type $list_year
-     * @return type
-     */
-    public function nextList($time_range, $list_day, $list_month, $list_year)
-    {
-        $time = Time::now();
-        $time->setDate($list_year, $list_month, $list_day);
-        switch ($time_range) {
-            case 'day':
-                $time = $time->addDay();
-                break;
-            case 'month':
-                $time = $time->addMonth();
-                break;
-            case 'year':
-                $time = $time->addYear();
-                break;
-            case 'week':
-                $time = $time->addWeek();
-                break;
-            case 'quarter':
-                $time = $time->addMonths(3);
-                break;
-        }
-        return [$time_range, $time];
-    }
 }

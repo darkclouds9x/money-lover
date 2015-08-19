@@ -274,7 +274,7 @@ class UsersController extends AppController
                                     'action' => 'add',
                         ]);
                     } else {
-                        return $this->redirect(['_name' => 'index']);
+                        return $this->redirect(['controller' => 'transactions', 'action' => 'index']);
                     }
                 }
             } else {

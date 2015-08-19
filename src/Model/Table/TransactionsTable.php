@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\Database\Exception;
+use DateTime;
 
 /**
  * Transactions Model
@@ -123,14 +124,14 @@ class TransactionsTable extends Table
      * @param type $list_year
      * @return type
      */
-    public function getTransactionsOfMonth($wallet_id, $list_month, $list_year)
+    public function getTransactionsOfMonth($wallet_id, $now)
     {
         $transactions = $this->find('all', [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.done_date)' => $list_month,
-                'YEAR(Transactions.done_date)' => $list_year,
+                'MONTH(Transactions.done_date)' => $now->month,
+                'YEAR(Transactions.done_date)' => $now->year,
             ],
             'contain' => ['Categories']
         ]);
@@ -141,69 +142,117 @@ class TransactionsTable extends Table
      * Get condition to get transaction of a day
      * 
      * @param type $wallet_id
-     * @param type $list_day
-     * @param type $list_month
-     * @param type $list_year
+     * @param type $now
+     * @param type $current
      * @return array
      */
-    public function conditionDay($wallet_id, $list_day, $list_month, $list_year)
+    public function conditionDay($wallet_id, $now)
     {
         $condition_day = [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'DAY(Transactions.done_date)' => $list_day,
-                'MONTH(Transactions.done_date)' => $list_month,
-                'YEAR(Transactions.done_date)' => $list_year,
+                'DAY(Transactions.done_date)' => $now->day,
+                'MONTH(Transactions.done_date)' => $now->month,
+                'YEAR(Transactions.done_date)' => $now->year,
             ],
             'contain' => ['Categories.Types'],
             'order' => ['created' => 'ASC'],
         ];
         return $condition_day;
     }
+
     /**
      * Condition to get transactions of month
      * 
      * @param type $wallet_id
-     * @param type $list_month
-     * @param type $list_year
+     * @param type $now
+     * @param type $current
      * @return array
      */
-    public function conditionMonth($wallet_id, $list_month, $list_year)
+    public function conditionMonth($wallet_id, $now)
     {
         $condition_month = [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.done_date)' => $list_month,
-                'YEAR(Transactions.done_date)' => $list_year,
+                'MONTH(Transactions.done_date)' => $now->month,
+                'YEAR(Transactions.done_date)' => $now->year,
             ],
             'contain' => ['Categories.Types'],
             'order' => ['created' => 'ASC'],
         ];
         return $condition_month;
     }
-    
+
     /**
-     * Condition to get transactions of year
+     * Condition to list transactions of year
      * 
      * @param type $wallet_id
-     * @param type $list_year
+     * @param type $now
+     * @param type $current
      * @return array
      */
-        public function conditionYear($wallet_id,$list_year)
+    public function conditionYear($wallet_id, $now)
     {
         $condition_year = [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'YEAR(Transactions.done_date)' => $list_year,
+                'YEAR(Transactions.done_date)' => $now->year,
             ],
             'contain' => ['Categories.Types'],
             'order' => ['created' => 'ASC'],
         ];
         return $condition_year;
-    } 
+    }
+
+    /**
+     * Condition to list transactions of week
+     * 
+     * @param type $wallet_id
+     * @param type $now
+     * @return array
+     */
+    public function conditionWeek($wallet_id, $now, $current)
+    {
+        $day_of_week = $now->dayOfWeek;
+
+        $condition_week = [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status ' => 1,
+                'Transactions.done_date >=' => new DateTime((-$day_of_week + 7 * $current + 1) . ' Days'),
+                'Transactions.done_date <=' => new DateTime((7 - $day_of_week + 7 * $current) . ' Day'),
+            ],
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
+        ];
+        return $condition_week;
+    }
+
+    /**
+     * Condition to list transactions of quarter
+     * 
+     * @param type $wallet_id
+     * @param type $now
+     * @return type
+     */
+    public function conditionQuarter($wallet_id, $now)
+    {
+        $time = $this->getTimeOfQuarter($now);
+        $condition_quarter = [
+            'conditions' => [
+                'Transactions.wallet_id' => $wallet_id,
+                'Transactions.status' => 1,
+                'Transactions.done_date >' => $time[0],
+                'Transactions.done_date <=' => $time[1],
+            ],
+            'contain' => ['Categories.Types'],
+            'order' => ['created' => 'ASC'],
+        ];
+        return $condition_quarter;
+    }
 
     /**
      * Get all transactions before month
@@ -213,14 +262,14 @@ class TransactionsTable extends Table
      * @param type $list_year
      * @return type
      */
-    public function getTransactionsBeforeMonth($wallet_id, $list_month, $list_year)
+    public function getTransactionsBeforeMonth($wallet_id, $now)
     {
         $transactions = $this->find('all', [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.done_date) <' => $list_month,
-                'YEAR(Transactions.done_date) <=' => $list_year,
+                'MONTH(Transactions.done_date) <' => $now->month,
+                'YEAR(Transactions.done_date) <=' => $now->year,
             ],
             'contain' => ['Categories']
         ]);
@@ -235,14 +284,14 @@ class TransactionsTable extends Table
      * @param type $list_year
      * @return type
      */
-    public function getTransactionsAfterMonth($wallet_id, $list_time)
+    public function getTransactionsAfterMonth($wallet_id, $now)
     {
         $transactions = $this->find('all', [
             'conditions' => [
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
-                'MONTH(Transactions.done_date) >' => $list_time->month,
-                'YEAR(Transactions.done_date) >=' => $list_time->year,
+                'MONTH(Transactions.done_date) >' => $now->month,
+                'YEAR(Transactions.done_date) >=' => $now->year,
             ],
             'contain' => ['Categories']
         ]);
@@ -416,6 +465,33 @@ class TransactionsTable extends Table
             'note' => __('Received from ') . $transfer_wallet_title,
         ]);
         return $receiver_transaction;
+    }
+
+    public function getTimeOfQuarter($now)
+    {
+        $start = new DateTime();
+        $end = new DateTime();
+
+        $quarter = $now->toQuarter();
+        switch ($quarter) {
+            case 1:
+                $start->setDate($now->year,1,1);
+                $end->setDate($now->year, 3, 31);
+                break;
+            case 2:
+                $start->setDate($now->year,4,1);
+                $end->setDate($now->year, 6, 30);
+                break;
+            case 3:
+                $start->setDate($now->year,7,1);
+                $end->setDate($now->year, 9, 30);
+                break;
+            case 4:
+                $start->setDate($now->year,10,1);
+                $end->setDate($now->year, 12, 31);
+                break;
+        }
+        return [$start, $end];
     }
 
 }

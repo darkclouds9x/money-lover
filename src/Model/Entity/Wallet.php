@@ -25,9 +25,9 @@ class Wallet extends Entity
      * return bolean
      */
 
-    public function checkCreatedWallet($month, $year)
+    public function checkCreatedWallet($time)
     {
-        if (($month < $this->created->month) && ($year <= $this->created->year)) {
+        if (($time->month < $this->created->month) && ($time->year <= $this->created->year)) {
             return false;
         } else {
             return true;
