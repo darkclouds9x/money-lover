@@ -18,7 +18,6 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
-use Cake\Controller\Component\AuthComponent;
 use Cake\I18n\I18n;
 
 /**
@@ -44,9 +43,12 @@ class AppController extends Controller
         parent::initialize();
         $this->loadModel('Users');
         $this->loadModel('Wallets');
+        $this->loadModel('Categories');
+        $this->loadModel('Types');
+        $this->loadModel('Transactions');
+
         $this->loadComponent('Flash');
         $this->loadComponent('Auth', [
-            'authorize' => 'Controller',
             'authenticate' => [
                 'Form' => [
                     'fields' => [
@@ -94,6 +96,17 @@ class AppController extends Controller
     }
 
     /**
+     * Get all wallets of users
+     * 
+     * @return type
+     */
+    public function getAllWalletsOfUser()
+    {
+        $id = $this->Auth->user('id');
+        $wallets = $this->Wallets->getAllWalletsOfUser($id);
+        return $wallets;
+    }
+    /**
      * Change locale method
      * @return type
      */
@@ -123,25 +136,19 @@ class AppController extends Controller
             $current_wallet = $this->Wallets->find('all', [
                 'conditions' => ['id' => $user->last_wallet],
                 'fields' => ['id', 'title', 'current_balance'],
-            ]);
+            ])->first();
             return $current_wallet;
         }
     }
 
+    /**
+     * Allow display data before loging
+     * 
+     * @param Event $event
+     */
     public function beforeFilter(Event $event)
     {
         $this->Auth->allow(['display']);
-    }
-
-    /**
-     * Authorize actions of user
-     * 
-     * @param type $user
-     * @return boolean
-     */
-    public function isAuthorized($user)
-    {
-        return false;
     }
 
 }

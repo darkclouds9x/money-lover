@@ -55,4 +55,18 @@ class TypesTable extends Table
 
         return $validator;
     }
+    
+    /**
+     * Get all types of category
+     * 
+     * @return type
+     */
+    public function getAllTypes()
+    {
+     $type = $this->find('all', [
+            'fields' => ['title'],
+            'limit' => 2,
+        ]);
+        return $type;
+    }
 }

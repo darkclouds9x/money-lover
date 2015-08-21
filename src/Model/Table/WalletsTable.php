@@ -96,14 +96,13 @@ class WalletsTable extends Table
      * @param type $user
      * @return type
      */
-    public function getAllWalletsOfUser($user)
+    public function getAllWalletsOfUser($user_id)
     {
         $wallets = $this->find('list', [
             'conditions' => [
-                'Wallets.user_id' => $user->id,
+                'Wallets.user_id' => $user_id,
                 'Wallets.status' => 1,
             ],
-            'limit' => 200
         ]);
         return $wallets;
     }
@@ -134,10 +133,37 @@ class WalletsTable extends Table
      */
     public function deleteWallet($user, $wallet)
     {
+        $wallet->status = 0;
+        $user->total_balance = $user->total_balance - $wallet->current_balance;
+
+        //delete current wallet
+        if ($wallet->id == $user->last_wallet) {
+            $new_current_wallet = $this->find('all', [
+                        'fields' => ['id', 'is_current'],
+                        'conditions' => ['user_id' => $user->id, 'id !=' => $wallet->id, 'status' => 1]
+                    ])->first();
+            if (empty($new_current_wallet)) {
+
+                $user->last_wallet = 0;
+            } else {
+                $user->last_wallet = $new_current_wallet['id'];
+                $wallet->is_current = 0;
+                $new_current_wallet['is_current'] = 1;
+            }
+        }
+        // checking number wallets of user
+        if ($this->countWallets($user->id) == 1) {
+            $user->last_wallet = 0;
+        }
         $conn = ConnectionManager::get('default');
         $conn->begin();
         try {
-            $this->saveAfterDeleleWallet($user, $wallet);
+            if (!empty($new_current_wallet)) {
+                $this->save($new_current_wallet);
+            }
+            $this->save($wallet);
+            $this->Users->save($user);
+            $this->Categories->deleteAllCategoriesOfWallet($wallet->id);
             $conn->commit();
         } catch (Exception $e) {
             $conn->rollback();
@@ -147,27 +173,80 @@ class WalletsTable extends Table
     }
 
     /**
-     * Save user and wallet after deleting wallet
+     * Save after add new wallet
      * 
-     * @param type $user
      * @param type $wallet
+     * @param type $user
      * @return boolean
      */
-    public function saveAfterDeleleWallet($user, $wallet)
+    public function saveAfterAdd($wallet, $user)
     {
-        $wallet->status = 0;
-        $user->total_balance = $user->total_balance - $wallet->current_balance;
-
-        // checking number wallets of user
-        if ($this->countWallets($user->id) == 1) {
-            $user->last_wallet = 0;
-        }
-
-        if ($this->save($wallet) && $this->Users->save($user) && $this->Categories->deleteAllCategoriesOfWallet($wallet->id)) {
+        $wallet->user_id = $user->id;
+        $wallet->current_balance = $wallet->init_balance;
+        $user->total_balance = $user->total_balance + $wallet->init_balance;
+        $conn = ConnectionManager::get('default');
+        $conn->begin();
+        try {
+            $this->save($wallet);
+            $default_categories = $this->Categories->addCategoriesByDefault($wallet);
+            $this->Categories->saveDefaultCategory($default_categories);
+            //if don't have any wallet-> add and set current wallet
+            if (empty($user->last_wallet)) {
+                $wallet->is_current = 1;
+                $user->last_wallet = $wallet->id;
+                $this->save($wallet);           
+            }
+            $this->Users->save($user);
+            $conn->commit();
             return true;
-        } else {
+        } catch (Exception $ex) {
+            $conn->rollback();
             return false;
         }
+    }
+
+    /**
+     * Save after changing current wallet
+     * 
+     * @param type $user
+     * @param type $current_wallet
+     * @param type $last_wallet
+     * @return boolean
+     */
+    public function saveAfterChangeCurrent($user, $current_wallet, $last_wallet)
+    {
+        $conn = ConnectionManager::get('default');
+        $conn->begin();
+        try {
+            $this->Users->save($user);
+            $this->save($current_wallet);
+            $this->save($last_wallet);
+            $conn->commit();
+
+            return true;
+        } catch (Exception $ex) {
+            $conn->rollback();
+            return false;
+        }
+    }
+
+    /**
+     * Total balance of user
+     * 
+     * @param type $user_id
+     * @return type
+     */
+    public function totalBalanceOfUser($user_id)
+    {
+        $total = 0;
+        $wallets = $this->find('all', [
+            'conditions' => ['user_id' => $user_id, 'status' => 1],
+            'fields' => ['current_balance'],
+        ]);
+        foreach ($wallets as $wallet) {
+            $total += $wallet['current_balance'];
+        }
+        return $total;
     }
 
 }

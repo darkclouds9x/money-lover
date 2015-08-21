@@ -17,7 +17,7 @@
 <div class="wallets form large-10 medium-9 columns">
     <?= $this->Form->create($wallet) ?>
     <fieldset>
-        <legend><?= __('Edit Wallet') ?></legend>
+        <legend><?php echo $title ?></legend>
         <?php
             echo $this->Form->input('title');
             echo $this->Form->input('init_balance');

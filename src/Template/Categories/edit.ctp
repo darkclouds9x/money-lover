@@ -23,7 +23,7 @@
     ];
     ?>
     <fieldset>
-        <legend><?= __('Edit Category') ?></legend>
+        <legend><?php echo $title ?></legend>
         <?php
         echo $this->Form->input('title');
         echo $this->Form->input('wallet_id', ['options' => $wallets]);

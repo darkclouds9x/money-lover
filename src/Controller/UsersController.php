@@ -194,29 +194,6 @@ class UsersController extends AppController
     }
 
     /**
-     * Authorization for action.
-     * 
-     * @param type $user
-     * @return boolean
-     */
-    public function isAuthorized($user)
-    {
-        $action = $this->request->params['action'];
-
-        // The add and index actions are always allowed.
-        if (in_array($action, ['changePassword', 'index', 'edit', 'save', 'add'])) {
-            return true;
-        }
-
-        // All other actions require an id.
-        if (empty($this->request->params['pass'][0])) {
-            return false;
-        }
-
-        return parent::isAuthorized($user);
-    }
-
-    /**
      * Send activation email
      * 
      * @param type $user

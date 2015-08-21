@@ -12,14 +12,6 @@ use App\Controller\AppController;
 class WalletsController extends AppController
 {
 
-    public function initialize()
-    {
-        parent::initialize();
-        $this->loadModel('Users');
-        $this->loadModel('Transactions');
-        $this->loadModel('Categories');
-    }
-
     /**
      * Index method
      *
@@ -38,22 +30,6 @@ class WalletsController extends AppController
     }
 
     /**
-     * View method
-     *
-     * @param string|null $id Wallet id.
-     * @return void
-     * @throws \Cake\Network\Exception\NotFoundException When record not found.
-     */
-    public function view($id = null)
-    {
-        $wallet = $this->Wallets->get($id, [
-            'contain' => ['Users', 'Categories']
-        ]);
-        $this->set('wallet', $wallet);
-        $this->set('_serialize', ['wallet']);
-    }
-
-    /**
      * Add method
      *
      * @return void Redirects on successful add, renders view otherwise.
@@ -64,26 +40,8 @@ class WalletsController extends AppController
         $wallet = $this->Wallets->newEntity();
         if ($this->request->is('post')) {
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
-            $wallet->user_id = $user->id;
-            $wallet->current_balance = $wallet->init_balance;
-            $user->total_balance = $user->total_balance + $wallet->init_balance;
-            if ($this->Wallets->save($wallet)) {
-                //Add wallet after first
-                if (empty($user->last_wallet)) {
-                    $wallet->is_current = 1;
-                    $user->last_wallet = $wallet->id;
-                    $default_categories = $this->Categories->addDefaultCategories($wallet);
-                    $this->Categories->saveDefaultCategory($default_categories);
-                    if ($this->Wallets->save($wallet) && $this->Categories->saveDefaultCategory($default_categories) && $this->Users->save($user)) {
-                        $this->Flash->success(__('The wallet has been saved.'));
-                        return $this->redirect(['action' => 'index']);
-                    } else {
-                        $this->Flash->error(__('The wallet could not be saved. Please, try again.'));
-                    }
-                }
-                //Add default categories
-                $default_categories = $this->Categories->addDefaultCategories($wallet);
-                $this->Categories->saveDefaultCategory($default_categories);
+
+            if ($this->Wallets->saveAfterAdd($wallet, $user)) {
                 $this->Flash->success(__('The wallet has been saved.'));
                 return $this->redirect(['action' => 'index']);
             } else {
@@ -91,8 +49,10 @@ class WalletsController extends AppController
             }
         }
 
-        $this->set(compact('wallet'));
+        $title = __('Add wallet');
+        $this->set(compact('wallet', 'title'));
         $this->set('_serialize', ['wallet']);
+        $this->render('edit');
     }
 
     /**
@@ -104,9 +64,8 @@ class WalletsController extends AppController
      */
     public function edit($id = null)
     {
-        $wallet = $this->Wallets->get($id, [
-            'contain' => []
-        ]);
+
+        $wallet = $this->Wallets->get($id);
         if ($this->request->is(['patch', 'post', 'put'])) {
             $wallet = $this->Wallets->patchEntity($wallet, $this->request->data);
             $wallet->user_id = $this->Auth->user('id');
@@ -117,7 +76,8 @@ class WalletsController extends AppController
                 $this->Flash->error(__('The wallet could not be saved. Please, try again.'));
             }
         }
-        $this->set(compact('wallet'));
+        $title = __('Edit wallet');
+        $this->set(compact('wallet', 'title'));
         $this->set('_serialize', ['wallet']);
     }
 
@@ -155,8 +115,7 @@ class WalletsController extends AppController
             $last_wallet->is_current = 0;
             $current_wallet->is_current = 1;
             $user->last_wallet = $this->request->data['wallet_id'];
-            if ($this->Users->save($user) && ($this->Wallets->save($current_wallet) && $this->Wallets->save($last_wallet))) {
-                $current_wallet->is_current = 1;
+            if ($this->Wallets->saveAfterChangeCurrent($user, $current_wallet, $last_wallet)) {
                 $this->Flash->success(__('The current wallet is changed successfull.'));
                 return $this->redirect($this->referer());
             } else {
@@ -164,35 +123,6 @@ class WalletsController extends AppController
                 return $this->redirect($this->referer());
             }
         }
-    }
-
-    /**
-     * Authorization logic for wallets
-     * 
-     * @param type $user
-     * @return boolean
-     */
-    public function isAuthorized($user)
-    {
-        $action = $this->request->params['action'];
-
-
-        // The add and index actions are always allowed.
-        if (in_array($action, ['index', 'view', 'add', 'edit', 'changeCurrentWallet'])) {
-            return true;
-        }
-        // All other actions require an id.
-        if (empty($this->request->params['pass'][0])) {
-            return false;
-        }
-
-        // Check that the wallet belongs to the current user.
-        $id = $this->request->params['pass'][0];
-        $wallet = $this->Wallets->get($id);
-        if ($wallet->user_id == $user['id']) {
-            return true;
-        }
-        return parent::isAuthorized($user);
     }
 
 }

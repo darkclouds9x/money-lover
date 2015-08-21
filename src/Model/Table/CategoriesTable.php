@@ -99,7 +99,7 @@ class CategoriesTable extends Table
      * @param type $wallet
      * @return Category
      */
-    public function addDefaultCategories($wallet)
+    public function addCategoriesByDefault($wallet)
     {
         $difference_income = new Category([
             'title' => __('Difference'),

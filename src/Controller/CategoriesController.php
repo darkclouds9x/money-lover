@@ -31,7 +31,7 @@ class CategoriesController extends AppController
     public function index()
     {
         $user = $this->getCurrentUserInfo();
-        if(empty($user->last_wallet)){
+        if (empty($user->last_wallet)) {
             return $this->redirect(['controller' => 'wallets', 'action' => 'add']);
         }
         $this->paginate = [
@@ -46,7 +46,6 @@ class CategoriesController extends AppController
         ];
         $wallet = $this->Wallets->get($user->last_wallet);
         $wallets = $this->Wallets->getAllWalletsOfUser($user);
-//        var_dump($wallets);die;
         $last_wallet = $user->last_wallet;
         $this->set('categories', $this->paginate($this->Categories));
         $this->set(compact('$wallet', 'wallets', 'last_wallet'));
@@ -71,6 +70,7 @@ class CategoriesController extends AppController
         $current_category = $this->Categories->get($id, [
             'contain' => ['Wallets', 'Types', 'Transactions']
         ]);
+//        echo '<pre>'; var_dump($current_category);        echo '</pre>'; die;
         $income_categories = $this->Categories->getListIncomeCategories($user);
         $expense_categories = $this->Categories->getListExpenseCategories($user);
         $this->paginate = [
@@ -113,8 +113,10 @@ class CategoriesController extends AppController
         $income_categories = $this->Categories->getListIncomeCategories($user);
         $expense_categories = $this->Categories->getListExpenseCategories($user);
         $types = $this->Categories->Types->find('list', ['limit' => 2]);
-        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories'));
+        $title = __('Add Category');
+        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories', 'title'));
         $this->set('_serialize', ['category']);
+        $this->render('edit');
     }
 
     /**
@@ -126,7 +128,7 @@ class CategoriesController extends AppController
      */
     public function edit($id = null)
     {
-        $user =$this->getCurrentUserInfo();
+        $user = $this->getCurrentUserInfo();
         $category = $this->Categories->get($id, [
             'contain' => []
         ]);
@@ -140,11 +142,12 @@ class CategoriesController extends AppController
                 $this->Flash->error(__('The category could not be saved. Please, try again.'));
             }
         }
+        $title = __('Edit Categories');
         $income_categories = $this->Categories->getListIncomeCategories($user);
         $expense_categories = $this->Categories->getListExpenseCategories($user);
         $wallets = $this->Categories->Wallets->find('list', ['limit' => 200]);
         $types = $this->Categories->Types->find('list', ['limit' => 200]);
-        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories'));
+        $this->set(compact('category', 'wallets', 'types', 'income_categories', 'expense_categories', 'title'));
         $this->set('_serialize', ['category']);
     }
 
@@ -167,35 +170,6 @@ class CategoriesController extends AppController
             $this->Flash->error(__('The category could not be deleted. Please, try again.'));
         }
         return $this->redirect(['action' => 'index']);
-    }
-
-    /**
-     * Authorization logic for categories
-     * 
-     * @param type $user
-     * @return boolean
-     */
-    public function isAuthorized($user)
-    {
-        $action = $this->request->params['action'];
-
-
-        // The add and index actions are always allowed.
-        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
-            return true;
-        }
-        // All other actions require an id.
-        if (empty($this->request->params['pass'][0])) {
-            return false;
-        }
-
-        // Check that the wallet belongs to the current user.
-        $id = $this->request->params['pass'][0];
-        $category = $this->Categories->get($id);
-        if ($category->user_id == $user['id']) {
-            return true;
-        }
-        return parent::isAuthorized($user);
     }
 
 }
