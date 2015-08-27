@@ -201,9 +201,9 @@ class TransactionsController extends AppController
         $condition_list = $this->Transactions->getListOfMonthlyReport($current_wallet->id, $now, $current);
         $this->paginate = $condition_list;
         $types = $this->Types->getAllTypes();
-        $mothly_reports = $this->Transactions->monthlyReport($current_wallet, $now->format('m'), $now->format('y'));
+        $monthly_reports = $this->Transactions->monthlyReport($current_wallet, $now->format('m'), $now->format('y'));
         $this->set('transactions', $this->paginate($this->Transactions));
-        $this->set(compact('current_wallet', 'mothly_reports', 'types'));
+        $this->set(compact('current_wallet', 'monthly_reports', 'types'));
         $this->set('title', __('Monthly Report'));
     }
 

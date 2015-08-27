@@ -1,7 +1,6 @@
-<div class="actions columns large-2 medium-3">
-    <h3><?= __('Actions') ?></h3>
-    <ul class="side-nav">
-        <li><?=
+<?= $this->start('actions') ?>
+<ul class="side-nav">
+               <li><?=
             $this->Form->postLink(
                     __('Delete'), ['action' => 'delete', $category->id], ['confirm' => __('Are you sure you want to delete # {0}?', $category->id)]
             )
@@ -11,8 +10,9 @@
         <li><?= $this->Html->link(__('New Wallet'), ['controller' => 'Wallets', 'action' => 'add']) ?></li>
         <li><?= $this->Html->link(__('List Transactions'), ['controller' => 'Transactions', 'action' => 'index']) ?></li>
         <li><?= $this->Html->link(__('New Transaction'), ['controller' => 'Transactions', 'action' => 'add']) ?></li>
-    </ul>
-</div>
+</ul>
+<?= $this->end() ?>
+
 <div class="categories form large-10 medium-9 columns">
     <?= $this->Form->create($category) ?>
     <?php

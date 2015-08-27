@@ -72,17 +72,6 @@ class AppController extends Controller
         $this->Auth->allow(['display']);
     }
 
-    public function afterLogin()
-    {
-        Time::setToStringFormat('YYYY-MM-dd');
-        $time = new Time($this->Auth->user('date_of_birth'));
-        if ($time->isToday()) {
-            // Greet user with a happy birthday message
-            $this->set(compact('time'));
-            $this->Flash->success(__('Happy birthday to you...'));
-        }
-    }
-
     /**
      * Get current user
      * 

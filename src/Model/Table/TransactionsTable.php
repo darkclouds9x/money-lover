@@ -757,7 +757,7 @@ class TransactionsTable extends Table
                 'Transactions.wallet_id' => $wallet_id,
                 'Transactions.status' => 1,
                 'MONTH(Transactions.done_date)' => $now->format('m'),
-                'YEAR(Transactions.done_date)' => $now->format('y'),
+                'YEAR(Transactions.done_date)' => $now->format('o'),
             ],
             'contain' => ['Categories.Types'],
             'order' => ['created' => 'ASC'],

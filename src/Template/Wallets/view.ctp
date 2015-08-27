@@ -1,16 +1,14 @@
-<div class="actions columns large-2 medium-3">
-    <h3><?= __('Actions') ?></h3>
-    <ul class="side-nav">
+<?= $this->start('actions') ?>
+<ul class="side-nav">
         <li><?= $this->Html->link(__('Edit Wallet'), ['action' => 'edit', $wallet->id]) ?> </li>
         <li><?= $this->Form->postLink(__('Delete Wallet'), ['action' => 'delete', $wallet->id], ['confirm' => __('Are you sure you want to delete # {0}?', $wallet->id)]) ?> </li>
         <li><?= $this->Html->link(__('List Wallets'), ['action' => 'index']) ?> </li>
         <li><?= $this->Html->link(__('New Wallet'), ['action' => 'add']) ?> </li>
-        <li><?= $this->Html->link(__('List Users'), ['controller' => 'Users', 'action' => 'index']) ?> </li>
-        <li><?= $this->Html->link(__('New User'), ['controller' => 'Users', 'action' => 'add']) ?> </li>
         <li><?= $this->Html->link(__('List Categories'), ['controller' => 'Categories', 'action' => 'index']) ?> </li>
         <li><?= $this->Html->link(__('New Category'), ['controller' => 'Categories', 'action' => 'add']) ?> </li>
-    </ul>
-</div>
+</ul>
+<?= $this->end() ?>
+
 <div class="wallets view large-10 medium-9 columns">
     <h2><?= h($wallet->title) ?></h2>
     <div class="row">
